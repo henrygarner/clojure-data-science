@@ -1517,7 +1517,7 @@ http://cljds.com
 
 * Slides
 
-http://github.com/clojuredatascience/bristol-clojurians-april-2015
+http://github.com/henrygarner/clojure-data-science
 
 * Thank you!
 
