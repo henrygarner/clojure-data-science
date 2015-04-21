@@ -1,0 +1,2673 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Clojure for Data Science</title>
+
+<link rel="stylesheet" href="./reveal.js/css/reveal.css"/>
+<link rel="stylesheet" href="./reveal.js/css/theme/solarized.css" id="theme"/>
+<link rel="stylesheet" href="./reveal.js/lib/css/zenburn.css"/>
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = './reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide">
+<h1>Clojure for Data Science</h1>
+<h2></h2>
+<h2><a href="mailto:"></a></h2>
+<h2></h2>
+</section>
+
+<section>
+<section id="slide-sec-1">
+<h2 id="sec-1">Why me?</h2>
+<p>
+I am in the final stages of producing a book "Clojure for Data Science".
+</p>
+
+<p>
+It will be published via <a href="http://packtpub.com">http://packtpub.com</a> later this year.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-2">
+<h2 id="sec-2">Am I qualified?</h2>
+<p>
+I co-founded and was CTO of a data analytics company.
+</p>
+
+<p>
+I am a software engineer, not a statistician.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-3">
+<h2 id="sec-3">Data Science Venn</h2>
+<p>
+"Once you have acquired and cleaned the data, the next step is to actually extract insight from it. In order to do this, you need to apply appropriate math and statistics methods, which requires at least a baseline familiarity with these tools. This is not to say that a PhD in statistics in required to be a competent data scientist, but it does require knowing what an ordinary least squares regression is and how to interpret it"
+</p>
+
+<p>
+-Drew Conway
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-4">
+<h2 id="sec-4">Data Science Venn</h2>
+
+<div class="figure">
+<p><img src="./images/data_science_venn.png" alt="data_science_venn.png" />
+</p>
+</div>
+
+<p>
+Drew Conway
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-5">
+<h2 id="sec-5">Why is data science important?</h2>
+<p>
+The robots are coming!
+</p>
+
+<p>
+The rise of the <b>computational developer</b>.
+</p>
+
+<p>
+These trends influence the kinds of systems we are all expected to build.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-6">
+<h2 id="sec-6">Why Clojure?</h2>
+<p>
+Clojure lends itself to interactive exploration.
+</p>
+
+<p>
+It's fantastic for manipulating data.
+</p>
+
+<p>
+The JVM provides hosts many of the workhorse data processing frameworks.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-7">
+<h2 id="sec-7">What I will talk about</h2>
+<ul>
+<li>Distributions</li>
+<li>Statistics</li>
+<li>Correlation</li>
+<li>Visualisation with Quil</li>
+<li>Linear regression</li>
+<li>Multivariate linear regression with Incanter</li>
+<li>Bayes classification</li>
+<li>Logistic regression with Apache Commons Math</li>
+<li>Clustering with Parkour</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-8">
+<h2 id="sec-8">Follow along</h2>
+<p>
+The book's GitHub is available at <a href="http://github.com/clojuredatascience">http://github.com/clojuredatascience</a>
+</p>
+
+<ul>
+<li>ch1-introduction</li>
+<li>ch2-statistical-inference</li>
+<li>ch3-linear-regression</li>
+<li>ch5-classification</li>
+<li>ch6-clustering</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-9">
+<h2 id="sec-9">Part 1: Spotting election fraud</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-10">
+<h2 id="sec-10">Loading data</h2>
+<p>
+Using incanter's excel namespace
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">ns</span> <span style="color: #7CB8BB;">cljds.ch1.data</span>
+  <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:require</span> <span style="color: #696969;">[</span>incanter
+             <span style="color: #696969;">[</span>core <span style="color: #BFEBBF;">:as</span> i<span style="color: #696969;">]</span>
+             <span style="color: #696969;">[</span>excel <span style="color: #BFEBBF;">:as</span> xls<span style="color: #696969;">]]</span>
+            <span style="color: #696969;">[</span><span style="color: #7CB8BB;">clojure.java.io</span> <span style="color: #BFEBBF;">:as</span> io<span style="color: #696969;">]</span><span style="color: #696969;">))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">uk-data</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">io</span>/resource <span style="color: #CC9393;">"UK2010.xls"</span><span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span>str<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">xls</span>/read-xls<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/view <span style="color: #696969;">(</span>uk-data<span style="color: #696969;">))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-11">
+<h2 id="sec-11">Column names</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/view <span style="color: #696969;">(</span>uk-data<span style="color: #696969;">))</span>
+
+<span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/col-names <span style="color: #696969;">(</span>uk-data<span style="color: #696969;">))</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; ["Press Association Reference" "Constituency Name" "Region" "Election Year" "Electorate" "Votes" "AC" "AD" "AGS" "APNI" "APP" "AWL" "AWP" "BB" "BCP" "Bean" "Best" "BGPV" "BIB" "BIC" "Blue" "BNP" "BP Elvis" "C28" "Cam Soc" "CG" "Ch M" "Ch P" "CIP" "CITY" "CNPG" "Comm" "Comm L" "Con" "Cor D" "CPA" "CSP" "CTDP" "CURE" "D Lab" "D Nat" "DDP" "DUP" "ED" "EIP" "EPA" "FAWG" "FDP" "FFR" "Grn" "GSOT" "Hum" "ICHC" "IEAC" "IFED" "ILEU" "Impact" "Ind1" "Ind2" "Ind3" "Ind4" "Ind5" "IPT" "ISGB" "ISQM" "IUK" "IVH" "IZB" "JAC" "Joy" "JP" "Lab" "Land" "LD" "Lib" "Libert" "LIND" "LLPB" "LTT" "MACI" "MCP" "MEDI" "MEP" "MIF" "MK" "MPEA" "MRLP" "MRP" "Nat Lib" "NCDV" "ND" "New" "NF" "NFP" "NICF" "Nobody" "NSPS" "PBP" "PC" "Pirate" "PNDP" "Poet" "PPBF" "PPE" "PPNV" "Reform" "Respect" "Rest" "RRG" "RTBP" "SACL" "Sci" "SDLP" "SEP" "SF" "SIG" "SJP" "SKGP" "SMA" "SMRA" "SNP" "Soc" "Soc Alt" "Soc Dem" "Soc Lab" "South" "Speaker" "SSP" "TF" "TOC" "Trust" "TUSC" "TUV" "UCUNF" "UKIP" "UPS" "UV" "VCCA" "Vote" "Wessex Reg" "WRP" "You" "Youth" "YRDPL"]</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-12">
+<h2 id="sec-12">Electorate</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">uk-electorate</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>uk-data<span style="color: #696969;">)</span>
+       <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/$ <span style="color: #CC9393;">"Electorate"</span><span style="color: #696969;">)</span>
+       <span style="color: #696969;">(</span>remove nil?<span style="color: #696969;">))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-13">
+<h2 id="sec-13">Variance</h2>
+<p>
+\({ {1 \over n} \sum_{i=1}^n ( x_i - \mu_x )^2 }\)
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-14">
+<h2 id="sec-14">&#x2026;explained</h2>
+<p>
+\({\sum}\) is `(reduce + &#x2026;)`.
+</p>
+
+<p>
+\({ \sum_{i=1}^n }\) is "for all xs"
+</p>
+
+<p>
+\({ ( x_i - \mu_x )^2 }\) is a function of x and the mean of x
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">variance</span> <span style="color: #696969;">[</span>xs<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>m <span style="color: #696969;">(</span>mean xs<span style="color: #696969;">)</span>
+        n <span style="color: #696969;">(</span>count xs<span style="color: #696969;">)</span>
+        square-error <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[</span>x<span style="color: #696969;">]</span>
+                       <span style="color: #696969;">(</span><span style="color: #7CB8BB;">Math</span>/pow <span style="color: #696969;">(</span>- x m<span style="color: #696969;">)</span> 2<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>/ <span style="color: #696969;">(</span>reduce + <span style="color: #696969;">(</span>map square-error xs<span style="color: #696969;">))</span> n<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-15">
+<h2 id="sec-15">Histogram</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span>require '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">incanter.charts</span> <span style="color: #BFEBBF;">:as</span> c<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span>uk-electorate<span style="color: #696969;">)</span>
+    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">c</span>/histogram <span style="color: #BFEBBF;">:nbins</span> 20<span style="color: #696969;">)</span>
+    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/view<span style="color: #696969;">))</span>
+</pre>
+</div>
+
+
+<div class="figure">
+<p><img src="./images/histogram.png" alt="histogram.png" />
+</p>
+</div>
+
+
+</section>
+</section>
+<section>
+<section id="slide-sec-16">
+<h2 id="sec-16">Distibutions as models</h2>
+<p>
+<a href="http://imgur.com/4nnbyru">http://imgur.com/4nnbyru</a>
+</p>
+
+
+<div class="figure">
+<p><img src="./images/matura.jpg" alt="matura.jpg" />
+</p>
+</div>
+
+
+
+</section>
+</section>
+<section>
+<section id="slide-sec-17">
+<h2 id="sec-17">Poincaré's Bread</h2>
+<p>
+Poincaré weighed his bread every day for a year.
+</p>
+
+<p>
+He discovered that the weights of the bread followed a normal distribution, but that the peak was at 950g, whereas loaves of bread were supposed to be regulated at 1kg. He reported his baker to the authorities.
+</p>
+
+<p>
+The next year Poincaré continued to weigh his bread from the same baker, who was now wary of giving him the lighter loaves. After a year the mean loaf weight was 1kg, but this time the distribution was skewed to the left. This is consistent with the baker giving Poincaré only the heaviest of his loaves. The baker was reported to the authorities again
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-18">
+<h2 id="sec-18">Honest Baker</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span>require '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">incanter.distributions</span> <span style="color: #BFEBBF;">:as</span> d<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">honest-baker</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>distribution <span style="color: #696969;">(</span><span style="color: #7CB8BB;">d</span>/normal-distribution 1000 30<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>repeatedly #<span style="color: #696969;">(</span><span style="color: #7CB8BB;">d</span>/draw distribution<span style="color: #696969;">))))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-1-16</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span>take 10000 <span style="color: #696969;">(</span>honest-baker<span style="color: #696969;">))</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">c</span>/histogram <span style="color: #BFEBBF;">:nbins</span> 25<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/view<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+
+<div class="figure">
+<p><img src="./images/honest-baker.png" alt="honest-baker.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-19">
+<h2 id="sec-19">Dishonest Baker</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">dishonest-baker</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>distribution <span style="color: #696969;">(</span><span style="color: #7CB8BB;">d</span>/normal-distribution 950 30<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>repeatedly #<span style="color: #696969;">(</span><span style="color: #7CB8BB;">d</span>/draw distribution<span style="color: #696969;">))</span>
+         <span style="color: #696969;">(</span>partition 13<span style="color: #696969;">)</span>
+         <span style="color: #696969;">(</span>map <span style="color: #696969;">(</span>partial apply max<span style="color: #696969;">)))))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-1-17</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span>take 10000 <span style="color: #696969;">(</span>dishonest-baker<span style="color: #696969;">))</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">c</span>/histogram <span style="color: #BFEBBF;">:nbins</span> 25<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/view<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+
+<div class="figure">
+<p><img src="./images/dishonest-baker.png" alt="dishonest-baker.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-20">
+<h2 id="sec-20">The importance of visualisation</h2>
+<p>
+Anscombe's Quartet: all have identical mean and standard deviation.
+</p>
+
+
+<div class="figure">
+<p><img src="./images/anscombes-quartet.png" alt="anscombes-quartet.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-21">
+<h2 id="sec-21">Selection</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">filter-election-year</span> <span style="color: #696969;">[</span>data<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/$where <span style="color: #696969;">{</span><span style="color: #CC9393;">"Election Year"</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:$ne</span> <span style="color: #BFEBBF;">nil</span><span style="color: #696969;">}}</span> data<span style="color: #696969;">))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">filter-victor-constituencies</span> <span style="color: #696969;">[</span>data<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/$where <span style="color: #696969;">{</span><span style="color: #CC9393;">"Con"</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:$fn</span> number?<span style="color: #696969;">}</span> <span style="color: #CC9393;">"LD"</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:$fn</span>  number?<span style="color: #696969;">}}</span> data<span style="color: #696969;">))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-22">
+<h2 id="sec-22">Projection</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>uk-data<span style="color: #696969;">)</span>
+     <span style="color: #696969;">(</span>filter-election-year<span style="color: #696969;">)</span>
+     <span style="color: #696969;">(</span>filter-victor-constituencies<span style="color: #696969;">)</span>
+     <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/$ <span style="color: #696969;">[</span><span style="color: #CC9393;">"Region"</span> <span style="color: #CC9393;">"Electorate"</span> <span style="color: #CC9393;">"Con"</span> <span style="color: #CC9393;">"LD"</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+     <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/add-derived-column <span style="color: #CC9393;">"Victors"</span> <span style="color: #696969;">[</span><span style="color: #CC9393;">"Con"</span> <span style="color: #CC9393;">"LD"</span><span style="color: #696969;">]</span> +<span style="color: #696969;">)</span>
+     <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/add-derived-column <span style="color: #CC9393;">"Victors Share"</span> <span style="color: #696969;">[</span><span style="color: #CC9393;">"Victors"</span> <span style="color: #CC9393;">"Electorate"</span><span style="color: #696969;">]</span> /<span style="color: #696969;">)</span>
+     <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/view<span style="color: #696969;">))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-23">
+<h2 id="sec-23">Two variables: scatter plots!</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>uk-data<span style="color: #696969;">)</span>
+                <span style="color: #696969;">(</span>clean-uk-data<span style="color: #696969;">)</span>
+                <span style="color: #696969;">(</span>derive-uk-data<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">c</span>/scatter-plot <span style="color: #696969;">(</span>$ <span style="color: #CC9393;">"Turnout"</span> data<span style="color: #696969;">)</span>
+                      <span style="color: #696969;">(</span>$ <span style="color: #CC9393;">"Victors Share"</span> data<span style="color: #696969;">)</span>
+                      <span style="color: #BFEBBF;">:x-label</span> <span style="color: #CC9393;">"Turnout"</span>
+                      <span style="color: #BFEBBF;">:y-label</span> <span style="color: #CC9393;">"Victor's Share"</span><span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/view<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-24">
+<h2 id="sec-24">UK Votes scatter</h2>
+
+<div class="figure">
+<p><img src="./images/uk-votes-scatter.png" alt="uk-votes-scatter.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-25">
+<h2 id="sec-25">Russia is a bigger country</h2>
+
+<div class="figure">
+<p><img src="./images/ru-scatter-plot.png" alt="ru-scatter-plot.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-26">
+<h2 id="sec-26">We need a better visualization</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-27">
+<h2 id="sec-27">Binning data</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">bin</span> <span style="color: #696969;">[</span>n-bins xs<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>min-x    <span style="color: #696969;">(</span>apply min xs<span style="color: #696969;">)</span>
+        range-x  <span style="color: #696969;">(</span>- <span style="color: #696969;">(</span>apply max xs<span style="color: #696969;">)</span> min-x<span style="color: #696969;">)</span>
+        max-bin  <span style="color: #696969;">(</span>dec n-bins<span style="color: #696969;">)</span>
+        bin-fn   <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[</span>x<span style="color: #696969;">]</span>
+                   <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> x
+                       <span style="color: #696969;">(</span>- min-x<span style="color: #696969;">)</span>
+                       <span style="color: #696969;">(</span>/ range-x<span style="color: #696969;">)</span>
+                       <span style="color: #696969;">(</span>* n-bins<span style="color: #696969;">)</span>
+                       int
+                       <span style="color: #696969;">(</span>min max-bin<span style="color: #696969;">)))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>map bin-fn xs<span style="color: #696969;">)))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>uk-electorate<span style="color: #696969;">)</span>
+     <span style="color: #696969;">(</span>bin 10<span style="color: #696969;">)</span>
+     <span style="color: #696969;">(</span>frequencies<span style="color: #696969;">))</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; {0 1, 1 1, 2 4, 3 22, 4 130, 5 320, 6 156, 7 15, 9 1}</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-28">
+<h2 id="sec-28">A 2D histogram</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">histogram-2d</span> <span style="color: #696969;">[</span>xs ys n-bins<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span>map vector <span style="color: #696969;">(</span>bin n-bins xs<span style="color: #696969;">)</span> <span style="color: #696969;">(</span>bin n-bins ys<span style="color: #696969;">))</span>
+      <span style="color: #696969;">(</span>frequencies<span style="color: #696969;">)))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">uk-histogram-2d</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>uk-data<span style="color: #696969;">)</span>
+                  <span style="color: #696969;">(</span>clean-uk-data<span style="color: #696969;">)</span>
+                  <span style="color: #696969;">(</span>derive-uk-data<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>histogram-2d <span style="color: #696969;">(</span>$ <span style="color: #CC9393;">"Turnout"</span> data<span style="color: #696969;">)</span> <span style="color: #696969;">(</span>$ <span style="color: #CC9393;">"Victors Share"</span> data<span style="color: #696969;">)</span> 5<span style="color: #696969;">)))</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; {[2 1] 59, [3 2] 91, [4 3] 32, [1 0] 8, [2 2] 89, [3 3] 101, [4 4] 60, [0 0] 2, [1 1] 22, [2 3] 19, [3 4] 53, [0 1] 6, [1 2] 15, [2 4] 5, [1 3] 2, [0 3] 1, [3 0] 6, [4 1] 3, [3 1] 17, [4 2] 17, [2 0] 23}</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-29">
+<h2 id="sec-29">Quil</h2>
+<p>
+<a href="http://quil.info">http://quil.info</a>
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-30">
+<h2 id="sec-30">Visualization with Quil</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span>require '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">quil.core</span> <span style="color: #BFEBBF;">:as</span> q<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ratio-&gt;grayscale</span> <span style="color: #696969;">[</span>f<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> f
+      <span style="color: #696969;">(</span>* 255<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span>int<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span>min 255<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span>max 0<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">q</span>/color<span style="color: #696969;">)))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">draw-histogram</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:keys</span> <span style="color: #696969;">[</span>n-bins size<span style="color: #696969;">]</span><span style="color: #696969;">}</span><span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[[</span>width height<span style="color: #696969;">]</span> size
+        x-scale <span style="color: #696969;">(</span>/ width n-bins<span style="color: #696969;">)</span>
+        y-scale <span style="color: #696969;">(</span>/ height n-bins<span style="color: #696969;">)</span>
+        max-value <span style="color: #696969;">(</span>apply max <span style="color: #696969;">(</span>vals data<span style="color: #696969;">))</span>
+        setup <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[]</span>
+                <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">doseq</span> <span style="color: #696969;">[</span>x <span style="color: #696969;">(</span>range n-bins<span style="color: #696969;">)</span>
+                        y <span style="color: #696969;">(</span>range n-bins<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+                  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>v <span style="color: #696969;">(</span>get data <span style="color: #696969;">[</span>x y<span style="color: #696969;">]</span> 0<span style="color: #696969;">)</span>
+                        x-pos <span style="color: #696969;">(</span>* x x-scale<span style="color: #696969;">)</span>
+                        y-pos <span style="color: #696969;">(</span>- height <span style="color: #696969;">(</span>* y y-scale<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+                    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">q</span>/fill <span style="color: #696969;">(</span>ratio-&gt;grayscale <span style="color: #696969;">(</span>/ v max-value<span style="color: #696969;">)))</span>
+                    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">q</span>/rect x-pos y-pos  x-scale y-scale<span style="color: #696969;">))))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">q</span>/sketch <span style="color: #BFEBBF;">:setup</span> setup <span style="color: #BFEBBF;">:size</span> size<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-31">
+<h2 id="sec-31">A 2D histogram</h2>
+
+<div class="figure">
+<p><img src="./images/ru-2d-histogram.png" alt="ru-2d-histogram.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-32">
+<h2 id="sec-32">A Colour heatmap</h2>
+<p>
+Interpolate between the colours of the spectrum.
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ratio-&gt;heat</span> <span style="color: #696969;">[</span>f<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>colors <span style="color: #696969;">[</span><span style="color: #696969;">(</span><span style="color: #7CB8BB;">q</span>/color 0 0 255<span style="color: #696969;">)</span>   <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">blue</span>
+                <span style="color: #696969;">(</span><span style="color: #7CB8BB;">q</span>/color 0 255 255<span style="color: #696969;">)</span> <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">turquoise</span>
+                <span style="color: #696969;">(</span><span style="color: #7CB8BB;">q</span>/color 0 255 0<span style="color: #696969;">)</span>   <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">green</span>
+                <span style="color: #696969;">(</span><span style="color: #7CB8BB;">q</span>/color 255 255 0<span style="color: #696969;">)</span> <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">yellow</span>
+                <span style="color: #696969;">(</span><span style="color: #7CB8BB;">q</span>/color 255 0 0<span style="color: #696969;">)</span><span style="color: #696969;">]</span>  <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">red</span>
+        f <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> f
+              <span style="color: #696969;">(</span>max 0.000<span style="color: #696969;">)</span>
+              <span style="color: #696969;">(</span>min 0.999<span style="color: #696969;">)</span>
+              <span style="color: #696969;">(</span>* <span style="color: #696969;">(</span>dec <span style="color: #696969;">(</span>count colors<span style="color: #696969;">))))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">q</span>/lerp-color <span style="color: #696969;">(</span>nth colors f<span style="color: #696969;">)</span> <span style="color: #696969;">(</span>nth colors <span style="color: #696969;">(</span>inc f<span style="color: #696969;">))</span> <span style="color: #696969;">(</span>rem f 1<span style="color: #696969;">))))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-33">
+<h2 id="sec-33">A finished heatmap</h2>
+
+<div class="figure">
+<p><img src="./images/ru-2d-heatmap.png" alt="ru-2d-heatmap.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-34">
+<h2 id="sec-34">Credit</h2>
+<p>
+Proceedings of the National Academy of Sciences, titled "Statistical Detection of Election Irregularities," a team led by Santa Fe Institute External Professor Stefan Thurner
+</p>
+
+
+<div class="figure">
+<p><img src="./images/election-fingerprints.jpg" alt="election-fingerprints.jpg" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-35">
+<h2 id="sec-35">Inference</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-36">
+<h2 id="sec-36">What are statistics anyway?</h2>
+<p>
+They are estimates of values, based on a <b>sample</b>.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-37">
+<h2 id="sec-37">What are parameters?</h2>
+<p>
+They are the true values, based on the entire <b>population</b>.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-38">
+<h2 id="sec-38">Sampling size</h2>
+<p>
+The values converge as the sample size increases.
+</p>
+
+<p>
+We can often only infer the population parameters.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">Sample</th>
+<th scope="col" class="left">Population</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">\({ n }\)</td>
+<td class="left">\({ N }\)</td>
+</tr>
+
+<tr>
+<td class="left">\({\bar X}\)</td>
+<td class="left">\({ \mu_X }\)</td>
+</tr>
+
+<tr>
+<td class="left">\({ S_X }\)</td>
+<td class="left">\({ \sigma_X }\)</td>
+</tr>
+</tbody>
+</table>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-39">
+<h2 id="sec-39">Reagent</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #DFAF8F;">population-mean</span> 100<span style="color: #696969;">)</span>
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #DFAF8F;">population-sd</span>   20<span style="color: #696969;">)</span>
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #DFAF8F;">sample-size</span> 10<span style="color: #696969;">)</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-40">
+<h2 id="sec-40">Reagent atoms</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span>require '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">reagent.core</span> <span style="color: #BFEBBF;">:as</span> r<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">randn</span> <span style="color: #696969;">[</span>mean sd<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">..</span> <span style="color: #7CB8BB;">js</span>/<span style="color: #94BFF3;">jStat</span> -normal <span style="color: #696969;">(</span>sample mean sd<span style="color: #696969;">)))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">normal-distribution</span> <span style="color: #696969;">[</span>mean sd<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span>repeatedly #<span style="color: #696969;">(</span>randn mean sd<span style="color: #696969;">)))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #DFAF8F;">state</span>
+  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">r</span>/atom <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:sample</span> <span style="color: #696969;">[]</span><span style="color: #696969;">}</span><span style="color: #696969;">))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">update-sample!</span> <span style="color: #696969;">[</span>state<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span>swap! state assoc <span style="color: #BFEBBF;">:sample</span>
+         <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>normal-distribution population-mean population-sd<span style="color: #696969;">)</span>
+              <span style="color: #696969;">(</span>map int<span style="color: #696969;">)</span>
+              <span style="color: #696969;">(</span>take sample-size<span style="color: #696969;">))))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-41">
+<h2 id="sec-41">Create the widgets</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">new-sample</span> <span style="color: #696969;">[</span>state<span style="color: #696969;">]</span>
+  <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:button</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:on-click</span> #<span style="color: #696969;">(</span>update-sample! state<span style="color: #696969;">)</span><span style="color: #696969;">}</span> <span style="color: #CC9393;">"New Sample"</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">sample-list</span> <span style="color: #696969;">[</span>state<span style="color: #696969;">]</span>
+  <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:div</span>
+   <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>sample <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:sample</span> @state<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+     <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:div</span>
+      <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:ul</span> <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">for</span> <span style="color: #696969;">[</span>n sample<span style="color: #696969;">]</span> <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:li</span> n<span style="color: #696969;">]</span><span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+      <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:dl</span>
+       <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:dt</span> <span style="color: #CC9393;">"Sample Mean:"</span><span style="color: #696969;">]</span>
+       <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:dd</span> <span style="color: #696969;">(</span>mean sample<span style="color: #696969;">)</span><span style="color: #696969;">]]]</span><span style="color: #696969;">)</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-42">
+<h2 id="sec-42">Lay out the interface</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">layout-interface</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:div</span>
+   <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:h1</span> <span style="color: #CC9393;">"Normal Sample"</span><span style="color: #696969;">]</span>
+   <span style="color: #696969;">[</span>new-sample state<span style="color: #696969;">]</span>
+   <span style="color: #696969;">[</span>sample-list state<span style="color: #696969;">]]</span><span style="color: #696969;">)</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">Render the root component</span>
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">run</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">r</span>/render-component
+   <span style="color: #696969;">[</span>layout-interface<span style="color: #696969;">]</span>
+   <span style="color: #696969;">(</span><span style="color: #94BFF3;">.getElementById</span> <span style="color: #7CB8BB;">js</span>/document <span style="color: #CC9393;">"root"</span><span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-43">
+<h2 id="sec-43">Demo</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-44">
+<h2 id="sec-44">Standard Error</h2>
+<p>
+It's the standard deviation of the sample means.
+</p>
+
+<p>
+\({SE =} { \sigma_X \over \sqrt{n} }\) 
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-45">
+<h2 id="sec-45">Standard Error</h2>
+<p>
+Let's see how the standard error changes with sample size
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-46">
+<h2 id="sec-46">Demo</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-47">
+<h2 id="sec-47">Small samples</h2>
+<p>
+The standard error is calculated from the population standard deviation, but we don't know it!
+</p>
+
+<p>
+In practice they're assumed to be the same above around 30 samples, but there is another distribution that models the loss of precision with small samples.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-48">
+<h2 id="sec-48">T-distribution</h2>
+
+<div class="figure">
+<p><img src="./images/t-distribution.gif" alt="t-distribution.gif" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-49">
+<h2 id="sec-49">Calculating the t-statistic</h2>
+<p>
+Based entirely on our sample statistics
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">t-statistic</span> <span style="color: #696969;">[</span>sample test-mean<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>sample-mean <span style="color: #696969;">(</span>mean sample<span style="color: #696969;">)</span>
+        sample-size <span style="color: #696969;">(</span>count sample<span style="color: #696969;">)</span>
+        sample-sd   <span style="color: #696969;">(</span>standard-deviation sample<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>/ <span style="color: #696969;">(</span>- sample-mean test-mean<span style="color: #696969;">)</span>
+       <span style="color: #696969;">(</span>/ sample-sd <span style="color: #696969;">(</span><span style="color: #7CB8BB;">Math</span>/sqrt sample-size<span style="color: #696969;">)))))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-50">
+<h2 id="sec-50">Demo</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-51">
+<h2 id="sec-51">Why this interest in means?</h2>
+<p>
+Because often when we want to know if a difference in populations is statistically significant, we'll compare the means.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-52">
+<h2 id="sec-52">Hypothesis testing</h2>
+<p>
+By convention the data is assumed not to support what the researcher is looking for.
+</p>
+
+<p>
+This conservative assumption is called the <i>null hypothesis</i> and denoted \({h_0}\).
+</p>
+
+<p>
+The <i>alternate hypothesis</i>, \({h_1}\), can then only be supported with a given confidence interval.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-53">
+<h2 id="sec-53">Significance</h2>
+<p>
+The greater the significance of a result, the more certainty we have that the null hypothesis can be rejected.
+</p>
+
+<p>
+Let's use our range controller to adjust the significance threshold.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-54">
+<h2 id="sec-54">Demo</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-55">
+<h2 id="sec-55">Prediction</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-56">
+<h2 id="sec-56">Question</h2>
+<p>
+What was Olympic swimmer Mark Spitz' competition weight?
+</p>
+
+
+<div class="figure">
+<p><img src="./images/spitz.jpg" alt="spitz.jpg" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-57">
+<h2 id="sec-57">Population of Olympic swimmers</h2>
+<p>
+The Guardian has helpfully provided data on the vital statistics of Olympians
+</p>
+
+<p>
+<a href="http://www.theguardian.com/sport/datablog/2012/aug/07/olympics-2012-athletes-age-weight-height#data">http://www.theguardian.com/sport/datablog/2012/aug/07/olympics-2012-athletes-age-weight-height#data</a>
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-58">
+<h2 id="sec-58">Weight histogram</h2>
+
+<div class="figure">
+<p><img src="./images/athlete-weight-histogram.png" alt="athlete-weight-histogram.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-59">
+<h2 id="sec-59">Log-Weight histogram</h2>
+
+<div class="figure">
+<p><img src="./images/athlete-logweight-histogram.png" alt="athlete-logweight-histogram.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-60">
+<h2 id="sec-60">Log-Normal distribution</h2>
+<p>
+"A variable might be modeled as log-normal if it can be thought of as the multiplicative product of many independent random variables, each of which is positive. This is justified by considering the central limit theorem in the log-domain."
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-61">
+<h2 id="sec-61">Scatter Plot</h2>
+
+<div class="figure">
+<p><img src="./images/swimmer-height-weight-scatter.png" alt="swimmer-height-weight-scatter.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-62">
+<h2 id="sec-62">What is correlation anyway?</h2>
+<p>
+We've talked about variance in the context of the normal distribution
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-63">
+<h2 id="sec-63">Covariance</h2>
+<p>
+How much things vary together!
+</p>
+
+<p>
+\({COV(X,Y) = {1 \over n} { \sum_{i=1}^n ( x_i - \mu_x ) ( y_i - \mu_y )}}\)
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-64">
+<h2 id="sec-64">Correlation</h2>
+<p>
+A few ways of measuring it, depending on whether your data is continuous or discrete
+</p>
+
+
+<div class="figure">
+<p><img src="./images/correlation.png" alt="correlation.png" />
+</p>
+</div>
+
+<p>
+<a href="http://xkcd.com/552/">http://xkcd.com/552/</a>
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-65">
+<h2 id="sec-65">Pearson's correlation</h2>
+<p>
+Covarience divided by the product of standard deviations
+</p>
+
+<p>
+Measures linear correlation.
+</p>
+
+<p>
+\({\rho X,Y} = {COV(X,Y) \over \sigma_X \sigma_Y}\)
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">pearsons-correlation</span> <span style="color: #696969;">[</span>x y<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span>/ <span style="color: #696969;">(</span>covariance x y<span style="color: #696969;">)</span>
+     <span style="color: #696969;">(</span>* <span style="color: #696969;">(</span>standard-deviation x<span style="color: #696969;">)</span>
+        <span style="color: #696969;">(</span>standard-deviation y<span style="color: #696969;">))))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-66">
+<h2 id="sec-66">Pearson's correlation</h2>
+<p>
+If \({r}\) is 0, it doesn’t necessarily mean that the variables are not correlated. Pearson’s correlation only measures linear relationships. There could still be some non-linear relationship between variables that isn’t captured by  as demonstrated by the following plots.
+</p>
+
+
+<div class="figure">
+<p><img src="./images/pearson-correlation-examples.png" alt="pearson-correlation-examples.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-67">
+<h2 id="sec-67">This is a statistic</h2>
+<p>
+The unknown population parameter for correlation is the Greek letter \({ \rho }\). We are only able to calculate the sample statistic \({ r }\).
+</p>
+
+<p>
+How far we can trust \({ r }\) as an estimate of \({ \rho }\) will depend on two factors:
+</p>
+<ul>
+<li>the size of the coefficient</li>
+<li>the size of the sample</li>
+
+</ul>
+
+<p>
+\({r X,Y} = {COV(X,Y) \over s_X s_Y}\)
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-68">
+<h2 id="sec-68">Bivariate Regression</h2>
+<p>
+\({y = \alpha + \beta x }\)
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-69">
+<h2 id="sec-69">Bivariate Regression</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">slope</span> <span style="color: #696969;">[</span>x y<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span>/ <span style="color: #696969;">(</span>covariance x y<span style="color: #696969;">)</span>
+     <span style="color: #696969;">(</span>variance x<span style="color: #696969;">)))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">intercept</span> <span style="color: #696969;">[</span>x y<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span>- <span style="color: #696969;">(</span>mean y<span style="color: #696969;">)</span>
+     <span style="color: #696969;">(</span>* <span style="color: #696969;">(</span>mean x<span style="color: #696969;">)</span>
+        <span style="color: #696969;">(</span>slope x y<span style="color: #696969;">))))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">predict</span> <span style="color: #696969;">[</span>a b x<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span>+ a <span style="color: #696969;">(</span>* b x<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-70">
+<h2 id="sec-70">Training a model</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">swimmer-data</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>athlete-data<span style="color: #696969;">)</span>
+       <span style="color: #696969;">(</span>$where <span style="color: #696969;">{</span><span style="color: #CC9393;">"Height, cm"</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:$ne</span> <span style="color: #BFEBBF;">nil</span><span style="color: #696969;">}</span> <span style="color: #CC9393;">"Weight"</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:$ne</span> <span style="color: #BFEBBF;">nil</span><span style="color: #696969;">}</span>
+                <span style="color: #CC9393;">"Sport"</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:$eq</span> <span style="color: #CC9393;">"Swimming"</span><span style="color: #696969;">}}</span><span style="color: #696969;">)))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-3-12</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span>swimmer-data<span style="color: #696969;">)</span>
+        heights <span style="color: #696969;">(</span>$ <span style="color: #CC9393;">"Height, cm"</span> data<span style="color: #696969;">)</span>
+        weights <span style="color: #696969;">(</span>log <span style="color: #696969;">(</span>$ <span style="color: #CC9393;">"Weight"</span> data<span style="color: #696969;">))</span>
+        a <span style="color: #696969;">(</span>intercept heights weights<span style="color: #696969;">)</span>
+        b <span style="color: #696969;">(</span>slope heights weights<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>println <span style="color: #CC9393;">"Intercept: "</span> a<span style="color: #696969;">)</span>
+    <span style="color: #696969;">(</span>println <span style="color: #CC9393;">"Slope: "</span> b<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-71">
+<h2 id="sec-71">Making a prediction</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span>predict 1.691 0.0143 185<span style="color: #696969;">)</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; 4.3365</span>
+
+<span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/exp <span style="color: #696969;">(</span>predict 1.691 0.0143 185<span style="color: #696969;">))</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; 76.44</span>
+</pre>
+</div>
+
+<p>
+Corresponding to a predicted weight of 76.4kg
+</p>
+
+<p>
+In 1979, Mark Spitz was 79kg.
+</p>
+
+<p>
+<a href="http://www.topendsports.com/sport/swimming/profiles/spitz-mark.htm">http://www.topendsports.com/sport/swimming/profiles/spitz-mark.htm</a>
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-72">
+<h2 id="sec-72">More data!</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure">  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">features</span> <span style="color: #696969;">[</span>dataset col-names<span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/$ col-names dataset<span style="color: #696969;">)</span>
+         <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/to-matrix<span style="color: #696969;">)))</span>
+
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">gender-dummy</span> <span style="color: #696969;">[</span>gender<span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">if</span> <span style="color: #696969;">(</span>= gender <span style="color: #CC9393;">"F"</span><span style="color: #696969;">)</span>
+      0.0 1.0<span style="color: #696969;">))</span>
+
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-3-26</span> <span style="color: #696969;">[]</span>
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>swimmer-data<span style="color: #696969;">)</span>
+                    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/add-derived-column <span style="color: #CC9393;">"Gender Dummy"</span>
+                                          <span style="color: #696969;">[</span><span style="color: #CC9393;">"Sex"</span><span style="color: #696969;">]</span> gender-dummy<span style="color: #696969;">))</span>
+          x <span style="color: #696969;">(</span>features <span style="color: #696969;">[</span><span style="color: #CC9393;">"Height, cm"</span> <span style="color: #CC9393;">"Age"</span> <span style="color: #CC9393;">"Gender Dummy"</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+          y <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/log <span style="color: #696969;">(</span>$ <span style="color: #CC9393;">"Weight"</span> data<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">s</span>/linear-model y x<span style="color: #696969;">)))</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; [2.2307529431422637 0.010714697827121089 0.002372188749408574 0.0975412532492026]</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-73">
+<h2 id="sec-73">Multivariate Linear Regression</h2>
+<p>
+$${y = \theta_0 + \theta_1 x_1 + ... + \theta_n x_n}$$
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-74">
+<h2 id="sec-74">Making predictions</h2>
+<p>
+$${ y = \theta^T x }$$
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">predict</span> <span style="color: #696969;">[</span>theta x<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">cl</span>/t theta<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">cl</span>/* x<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span>first<span style="color: #696969;">)))</span>
+
+<span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/exp <span style="color: #696969;">(</span>predict <span style="color: #696969;">(</span>matrix <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:coefs</span> lm<span style="color: #696969;">))</span> <span style="color: #696969;">(</span>matrix <span style="color: #696969;">[</span>1 185 22 1<span style="color: #696969;">]</span><span style="color: #696969;">))</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; 78.46882772631697</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-75">
+<h2 id="sec-75">How close?</h2>
+<p>
+The result is around 78.47kg.
+</p>
+
+<p>
+Compared to 79kg, we were pretty close!
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-76">
+<h2 id="sec-76">Interlude</h2>
+</section>
+</section>
+<section>
+<section id="slide-sec-77">
+<h2 id="sec-77">Classification</h2>
+</section>
+</section>
+<section>
+<section id="slide-sec-78">
+<h2 id="sec-78">Question</h2>
+<p>
+Did all passengers on the Titanic have an equal chance of survival?
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-79">
+<h2 id="sec-79">Grab the data</h2>
+<p>
+Data is based on Thomas Cason's Titanic3 dataset. Information on how this was constructed is here.
+</p>
+
+<p>
+<a href="http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/titanic3info.txt">http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/titanic3info.txt</a>
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-80">
+<h2 id="sec-80">Inspect the data</h2>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="right" />
+
+<col  class="right" />
+
+<col  class="left" />
+
+<col  class="left" />
+
+<col  class="right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="right">Class</th>
+<th scope="col" class="right">Survived</th>
+<th scope="col" class="left">Name</th>
+<th scope="col" class="left">Sex</th>
+<th scope="col" class="right">Age</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="right">1</td>
+<td class="right">1</td>
+<td class="left">Allen, Miss. Elisabeth Walton</td>
+<td class="left">female</td>
+<td class="right">29</td>
+</tr>
+
+<tr>
+<td class="right">1</td>
+<td class="right">0</td>
+<td class="left">Allison, Mr. Hudson Joshua Creighton</td>
+<td class="left">male</td>
+<td class="right">30</td>
+</tr>
+</tbody>
+</table>
+
+
+</section>
+</section>
+<section>
+<section id="slide-sec-81">
+<h2 id="sec-81">Categorical variables</h2>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="right" />
+
+<col  class="right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">&#xa0;</th>
+<th scope="col" class="right">Survived</th>
+<th scope="col" class="right">Perished</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">Male</td>
+<td class="right">161</td>
+<td class="right">682</td>
+</tr>
+
+<tr>
+<td class="left">Female</td>
+<td class="right">339</td>
+<td class="right">127</td>
+</tr>
+</tbody>
+</table>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-82">
+<h2 id="sec-82">Standard error for a proportion</h2>
+<p>
+$${SE = \sqrt{ p(1-p) \over n } }$$
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">standard-error-proportion</span> <span style="color: #696969;">[</span>p n<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span>- 1 p<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span>* p<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span>/ n<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">Math</span>/sqrt<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+<p>
+$${ {161 + 339 \over 682 + 127}  = {500 \over 809} = 0.61 }$$
+$${SE =  0.013 }$$
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-83">
+<h2 id="sec-83">How significant?</h2>
+<p>
+$${z = { p_1 - p_2 \over  SE }}$$
+</p>
+
+<p>
+P1: the proportion of women who survived is \({ 339 \over 446 }\) = 0.76
+</p>
+
+<p>
+P2: the proportion of men who survived = \({161 \over 843 }\) = 0.19
+</p>
+
+<p>
+SE: 0.013
+</p>
+
+<p>
+z = 20.36
+</p>
+
+<p>
+This is essentially impossible.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-84">
+<h2 id="sec-84">More categories</h2>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="right" />
+
+<col  class="right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">&#xa0;</th>
+<th scope="col" class="right">Survived</th>
+<th scope="col" class="right">Perished</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">First Class</td>
+<td class="right">200</td>
+<td class="right">123</td>
+</tr>
+
+<tr>
+<td class="left">Second Class</td>
+<td class="right">119</td>
+<td class="right">158</td>
+</tr>
+
+<tr>
+<td class="left">Third Class</td>
+<td class="right">181</td>
+<td class="right">528</td>
+</tr>
+</tbody>
+</table>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-85">
+<h2 id="sec-85">Our approach doesn't scale</h2>
+<p>
+We can use a \({ \chi^2 }\) test.
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-5-5</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>observations <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/matrix <span style="color: #696969;">[[</span>200 119 181<span style="color: #696969;">]</span> <span style="color: #696969;">[</span>123 158 528<span style="color: #696969;">]]</span><span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">s</span>/chisq-test <span style="color: #BFEBBF;">:table</span> observations<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+<p>
+How likely is that this distribution occurred via chance?
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">{</span><span style="color: #BFEBBF;">:X-sq</span> 127.85915643930326, <span style="color: #BFEBBF;">:col-levels</span> <span style="color: #696969;">(</span>0 1 2<span style="color: #696969;">)</span>, <span style="color: #BFEBBF;">:row-margins</span> <span style="color: #696969;">{</span>0 500.0, 1 809.0<span style="color: #696969;">}</span>, <span style="color: #BFEBBF;">:table</span> <span style="color: #696969;">[</span>matrix<span style="color: #696969;">]</span> , <span style="color: #BFEBBF;">:p-value</span> 1.7208259588256175E-28, <span style="color: #BFEBBF;">:df</span> 2, <span style="color: #BFEBBF;">:probs</span> <span style="color: #BFEBBF;">nil</span>, <span style="color: #BFEBBF;">:col-margins</span> <span style="color: #696969;">{</span>0 323.0, 1 277.0, 2 709.0<span style="color: #696969;">}</span>, <span style="color: #BFEBBF;">:E</span> <span style="color: #696969;">(</span>123.37662337662337 199.62337662337663 105.80595874713522 171.1940412528648 270.8174178762414 438.1825821237586<span style="color: #696969;">)</span>, <span style="color: #BFEBBF;">:row-levels</span> <span style="color: #696969;">(</span>0 1<span style="color: #696969;">)</span>, <span style="color: #BFEBBF;">:two-samp?</span> <span style="color: #BFEBBF;">true</span>, <span style="color: #BFEBBF;">:N</span> 1309.0<span style="color: #696969;">}</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-86">
+<h2 id="sec-86">P-value</h2>
+<p>
+"The estimated probability of rejecting the null hypothesis \({h_0}\) of a study question when that hypothesis is true."
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-87">
+<h2 id="sec-87">Probability</h2>
+
+<div class="figure">
+<p><img src="./images/frequentists_vs_bayesians.jpg" alt="frequentists_vs_bayesians.jpg" />
+</p>
+</div>
+
+<p>
+<a href="https://xkcd.com/1132/">https://xkcd.com/1132/</a>
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-88">
+<h2 id="sec-88">Bayes Rule</h2>
+<p>
+$${P(A|B) = { P(B|A)P(A) \over P(B) }}$$
+</p>
+
+<p>
+\({ P(A) }\) initial degree of belief in A (the <i>prior</i>)
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-89">
+<h2 id="sec-89">Bayes titanic</h2>
+<p>
+$${ P(survive|female) = { P(female|survive) P(survive) \over P(female) } }$$
+</p>
+
+<p>
+$${ P(survive|female) = { {339 \over 500 } {500 \over 1309} \over {446 \over 1309 }} = { 339 \over 446 } }$$
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-90">
+<h2 id="sec-90">Bayes classification</h2>
+<p>
+$${ P(survive |third,male) = { p(survive) p(third|survive) p(male|survive) \over p(third,male)} }$$
+</p>
+
+<p>
+$${ P(perish |third,male) = { p(perish) p(third|perish) p(male|perish) \over p(third,male) } }$$
+</p>
+
+<p>
+Because the evidence is the same for all classes, we can cancel this out.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-91">
+<h2 id="sec-91">Parse the data</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span>titanic-samples<span style="color: #696969;">)</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; ({:survived true, :gender :female, :class :first, :embarked "S", :age "20-30"} {:survived true, :gender :male, :class :first, :embarked "S", :age "30-40"} ...)</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-92">
+<h2 id="sec-92">Implementing a Naive Bayes model</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">safe-inc</span> <span style="color: #696969;">[</span>v<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span>inc <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">or</span> v 0<span style="color: #696969;">)))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">inc-class-total</span> <span style="color: #696969;">[</span>model class<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span>update-in model <span style="color: #696969;">[</span>class <span style="color: #BFEBBF;">:total</span><span style="color: #696969;">]</span> safe-inc<span style="color: #696969;">))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">inc-predictors-count-fn</span> <span style="color: #696969;">[</span>row class<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[</span>model attr<span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>val <span style="color: #696969;">(</span>get row attr<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+      <span style="color: #696969;">(</span>update-in model <span style="color: #696969;">[</span>class attr val<span style="color: #696969;">]</span> safe-inc<span style="color: #696969;">))))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-93">
+<h2 id="sec-93">Implementing a Naive Bayes model</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">assoc-row-fn</span> <span style="color: #696969;">[</span>class-attr predictors<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[</span>model row<span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>class <span style="color: #696969;">(</span>get row class-attr<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+      <span style="color: #696969;">(</span>reduce <span style="color: #696969;">(</span>inc-predictors-count-fn row class<span style="color: #696969;">)</span>
+              <span style="color: #696969;">(</span>inc-class-total model class<span style="color: #696969;">)</span>
+              predictors<span style="color: #696969;">))))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">naive-bayes</span> <span style="color: #696969;">[</span>data class-attr predictors<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span>reduce <span style="color: #696969;">(</span>assoc-row-fn class-attr predictors<span style="color: #696969;">)</span> <span style="color: #696969;">{}</span> data<span style="color: #696969;">))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-94">
+<h2 id="sec-94">Naive Bayes model</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span>titanic-samples<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>pprint <span style="color: #696969;">(</span>naive-bayes data <span style="color: #BFEBBF;">:survived</span> <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:gender</span> <span style="color: #BFEBBF;">:class</span><span style="color: #696969;">]</span><span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+<p>
+&#x2026;produces the following output&#x2026;
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">{</span><span style="color: #BFEBBF;">false</span>
+ <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:class</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:third</span> 528, <span style="color: #BFEBBF;">:second</span> 158, <span style="color: #BFEBBF;">:first</span> 123<span style="color: #696969;">}</span>,
+  <span style="color: #BFEBBF;">:gender</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:male</span> 682, <span style="color: #BFEBBF;">:female</span> 127<span style="color: #696969;">}</span>,
+  <span style="color: #BFEBBF;">:total</span> 809<span style="color: #696969;">}</span>,
+ <span style="color: #BFEBBF;">true</span>
+ <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:class</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:third</span> 181, <span style="color: #BFEBBF;">:second</span> 119, <span style="color: #BFEBBF;">:first</span> 198<span style="color: #696969;">}</span>,
+  <span style="color: #BFEBBF;">:gender</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:male</span> 161, <span style="color: #BFEBBF;">:female</span> 337<span style="color: #696969;">}</span>,
+  <span style="color: #BFEBBF;">:total</span> 498<span style="color: #696969;">}}</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-95">
+<h2 id="sec-95">Making predictions</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">n</span> <span style="color: #696969;">[</span>model<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>vals model<span style="color: #696969;">)</span>
+       <span style="color: #696969;">(</span>map <span style="color: #BFEBBF;">:total</span><span style="color: #696969;">)</span>
+       <span style="color: #696969;">(</span>apply +<span style="color: #696969;">)))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">conditional-probability</span> <span style="color: #696969;">[</span>model test class<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>evidence <span style="color: #696969;">(</span>get model class<span style="color: #696969;">)</span>
+        prior <span style="color: #696969;">(</span>/ <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:total</span> evidence<span style="color: #696969;">)</span>
+                 <span style="color: #696969;">(</span>n model<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>apply * prior
+           <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">for</span> <span style="color: #696969;">[</span>kv test<span style="color: #696969;">]</span>
+             <span style="color: #696969;">(</span>/ <span style="color: #696969;">(</span>get-in evidence kv<span style="color: #696969;">)</span>
+                <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:total</span> evidence<span style="color: #696969;">))))))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">bayes-classify</span> <span style="color: #696969;">[</span>model test<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>probs <span style="color: #696969;">(</span>map <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[</span>class<span style="color: #696969;">]</span>
+                     <span style="color: #696969;">[</span>class <span style="color: #696969;">(</span>conditional-probability model test class<span style="color: #696969;">)</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+                   <span style="color: #696969;">(</span>keys model<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span>sort-by second &gt; probs<span style="color: #696969;">)</span>
+        ffirst<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-96">
+<h2 id="sec-96">Does it work?</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-5-7</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span>titanic-samples<span style="color: #696969;">)</span>
+        model <span style="color: #696969;">(</span>naive-bayes data <span style="color: #BFEBBF;">:survived</span> <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:gender</span> <span style="color: #BFEBBF;">:class</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>bayes-classify model <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:gender</span> <span style="color: #BFEBBF;">:male</span> <span style="color: #BFEBBF;">:class</span> <span style="color: #BFEBBF;">:third</span><span style="color: #696969;">}</span><span style="color: #696969;">)))</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; false</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-5-8</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span>titanic-samples<span style="color: #696969;">)</span>
+        model <span style="color: #696969;">(</span>naive-bayes data <span style="color: #BFEBBF;">:survived</span> <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:gender</span> <span style="color: #BFEBBF;">:class</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>bayes-classify model <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:gender</span> <span style="color: #BFEBBF;">:female</span> <span style="color: #BFEBBF;">:class</span> <span style="color: #BFEBBF;">:first</span><span style="color: #696969;">}</span><span style="color: #696969;">)))</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; true</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-97">
+<h2 id="sec-97">Why Naive?</h2>
+<p>
+Because it assumes all variables are independent. We know they are not (e.g. being male <i>and</i> in third class) but naive bayes weights all attributes equally.
+</p>
+
+<p>
+In practice it works surprisingly well, particularly where there are large numbers of features.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-98">
+<h2 id="sec-98">Logistic Regression</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-99">
+<h2 id="sec-99">Logistic regression</h2>
+<p>
+Logistic regression uses similar techniques to linear regression but guarantees an output only between 0 and 1.
+</p>
+
+<p>
+$${h_\theta(x) = \theta^T x}$$
+</p>
+
+<p>
+$${h_\theta(x) = g(\theta^T x)}$$
+</p>
+
+<p>
+Where the sigmoid function is
+</p>
+
+<p>
+$${ g(z) = { 1 \over  1 + e^{-z}} }$$
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-100">
+<h2 id="sec-100">The logistic function</h2>
+
+<div class="figure">
+<p><img src="./images/logistic-function.png" alt="logistic-function.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-101">
+<h2 id="sec-101">The logistic function</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">logistic-function</span> <span style="color: #696969;">[</span>theta<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>tt <span style="color: #696969;">(</span><span style="color: #7CB8BB;">matrix</span>/transpose <span style="color: #696969;">(</span>vec theta<span style="color: #696969;">))</span>
+        z  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[</span>x<span style="color: #696969;">]</span> <span style="color: #696969;">(</span>- <span style="color: #696969;">(</span><span style="color: #7CB8BB;">matrix</span>/mmul tt <span style="color: #696969;">(</span>vec x<span style="color: #696969;">))))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[</span>x<span style="color: #696969;">]</span>
+      <span style="color: #696969;">(</span>/ 1 <span style="color: #696969;">(</span>+ 1 <span style="color: #696969;">(</span><span style="color: #7CB8BB;">Math</span>/exp <span style="color: #696969;">(</span>z x<span style="color: #696969;">)))))))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-102">
+<h2 id="sec-102">Interpretation</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>f <span style="color: #696969;">(</span>logistic-function <span style="color: #696969;">[</span>0<span style="color: #696969;">]</span><span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span>f <span style="color: #696969;">[</span>1<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+  <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; 0.5</span>
+
+  <span style="color: #696969;">(</span>f <span style="color: #696969;">[</span>-1<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+  <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; 0.5</span>
+
+  <span style="color: #696969;">(</span>f <span style="color: #696969;">[</span>42<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+  <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; 0.5</span>
+  <span style="color: #696969;">)</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>f <span style="color: #696969;">(</span>logistic-function <span style="color: #696969;">[</span>0.2<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+      g <span style="color: #696969;">(</span>logistic-function <span style="color: #696969;">[</span>-0.2<span style="color: #696969;">]</span><span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span>f <span style="color: #696969;">[</span>5<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+  <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; 0.73</span>
+
+  <span style="color: #696969;">(</span>g <span style="color: #696969;">[</span>5<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+  <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; 0.27</span>
+  <span style="color: #696969;">)</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-103">
+<h2 id="sec-103">Cost function</h2>
+<p>
+Cost varies between 0 and (a big number).
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">cost-function</span> <span style="color: #696969;">[</span>y y-hat<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span>- <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">if</span> <span style="color: #696969;">(</span>zero? y<span style="color: #696969;">)</span>
+       <span style="color: #696969;">(</span><span style="color: #7CB8BB;">Math</span>/log <span style="color: #696969;">(</span>max <span style="color: #696969;">(</span>- 1 y-hat<span style="color: #696969;">)</span> <span style="color: #7CB8BB;">Double</span>/<span style="color: #BFEBBF;">MIN_VALUE</span><span style="color: #696969;">))</span>
+       <span style="color: #696969;">(</span><span style="color: #7CB8BB;">Math</span>/log <span style="color: #696969;">(</span>max y-hat <span style="color: #696969;">(</span><span style="color: #7CB8BB;">Double</span>/<span style="color: #BFEBBF;">MIN_VALUE</span><span style="color: #696969;">))))))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">logistic-cost</span> <span style="color: #696969;">[</span>ys y-hats<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span>avg <span style="color: #696969;">(</span>map cost-function ys y-hats<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-104">
+<h2 id="sec-104">Converting Titanic data to features</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">titanic-features</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span>remove <span style="color: #696969;">(</span>partial some nil?<span style="color: #696969;">)</span>
+          <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">for</span> <span style="color: #696969;">[</span>row <span style="color: #696969;">(</span>titanic-data<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+            <span style="color: #696969;">[</span><span style="color: #696969;">(</span><span style="color: #BFEBBF;">:survived</span> row<span style="color: #696969;">)</span>
+             <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:pclass</span> row<span style="color: #696969;">)</span>
+             <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:sibsp</span> row<span style="color: #696969;">)</span>
+             <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:parch</span> row<span style="color: #696969;">)</span>
+             <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">if</span> <span style="color: #696969;">(</span>nil? <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:age</span> row<span style="color: #696969;">))</span> 30 <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:age</span> row<span style="color: #696969;">))</span>
+             <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">if</span> <span style="color: #696969;">(</span>= <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:sex</span> row<span style="color: #696969;">)</span> <span style="color: #CC9393;">"female"</span><span style="color: #696969;">)</span> 1.0 0.0<span style="color: #696969;">)</span>
+             <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">if</span> <span style="color: #696969;">(</span>= <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:embarked</span> row<span style="color: #696969;">)</span> <span style="color: #CC9393;">"S"</span><span style="color: #696969;">)</span> 1.0 0.0<span style="color: #696969;">)</span>
+             <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">if</span> <span style="color: #696969;">(</span>= <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:embarked</span> row<span style="color: #696969;">)</span> <span style="color: #CC9393;">"C"</span><span style="color: #696969;">)</span> 1.0 0.0<span style="color: #696969;">)</span>
+             <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">if</span> <span style="color: #696969;">(</span>= <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:embarked</span> row<span style="color: #696969;">)</span> <span style="color: #CC9393;">"Q"</span><span style="color: #696969;">)</span> 1.0 0.0<span style="color: #696969;">)</span><span style="color: #696969;">]</span><span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-105">
+<h2 id="sec-105">Calculating the gradient</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">gradient-fn</span> <span style="color: #696969;">[</span>h-theta xs ys<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>g <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[</span>x y<span style="color: #696969;">]</span>
+            <span style="color: #696969;">(</span><span style="color: #7CB8BB;">matrix</span>/mmul <span style="color: #696969;">(</span>- <span style="color: #696969;">(</span>h-theta x<span style="color: #696969;">)</span> y<span style="color: #696969;">)</span> x<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>map g xs ys<span style="color: #696969;">)</span>
+         <span style="color: #696969;">(</span><span style="color: #7CB8BB;">matrix</span>/transpose<span style="color: #696969;">)</span>
+         <span style="color: #696969;">(</span>map avg<span style="color: #696969;">))))</span>
+</pre>
+</div>
+
+<p>
+We transpose to calculate the average for each feature across all xs rather than average for each x across all features.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-106">
+<h2 id="sec-106">Gradient descent</h2>
+<p>
+The cost function will be lowest when the parameters are at their optimum.
+</p>
+
+
+<div class="figure">
+<p><img src="./images/gradient-descent.png" alt="gradient-descent.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-107">
+<h2 id="sec-107">Apache Commons Math</h2>
+<p>
+Provides heavy-lifting for running tasks like gradient descent.
+</p>
+
+<p>
+Java :(
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #BFEBBF;">:import</span> <span style="color: #696969;">[</span><span style="color: #7CB8BB;">clojure.lang</span> <span style="color: #7CB8BB;">IFn</span><span style="color: #696969;">]</span>
+           <span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.commons.math3.analysis</span> <span style="color: #7CB8BB;">MultivariateFunction</span> <span style="color: #7CB8BB;">MultivariateVectorFunction</span> <span style="color: #7CB8BB;">ParametricUnivariateFunction</span><span style="color: #696969;">]</span>
+           <span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.commons.math3.optim</span> <span style="color: #7CB8BB;">InitialGuess</span> <span style="color: #7CB8BB;">MaxEval</span> <span style="color: #7CB8BB;">SimpleBounds</span> <span style="color: #7CB8BB;">OptimizationData</span> <span style="color: #7CB8BB;">SimpleValueChecker</span> <span style="color: #7CB8BB;">PointValuePair</span><span style="color: #696969;">]</span>
+           <span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.commons.math3.optim.nonlinear.scalar</span> <span style="color: #7CB8BB;">ObjectiveFunction</span> <span style="color: #7CB8BB;">ObjectiveFunctionGradient</span> <span style="color: #7CB8BB;">GoalType</span> <span style="color: #7CB8BB;">MultivariateOptimizer</span><span style="color: #696969;">]</span>
+           <span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.commons.math3.optim.nonlinear.scalar.gradient</span> <span style="color: #7CB8BB;">NonLinearConjugateGradientOptimizer</span> <span style="color: #7CB8BB;">NonLinearConjugateGradientOptimizer$Formula</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-108">
+<h2 id="sec-108">Clojure's Java interop</h2>
+<p>
+An object wrapper to represent a function: too many levels of indirection?!
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">objective-function</span> <span style="color: #696969;">[</span>f<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">ObjectiveFunction.</span> <span style="color: #696969;">(</span>reify <span style="color: #7CB8BB;">MultivariateFunction</span>
+                        <span style="color: #696969;">(</span>value <span style="color: #696969;">[</span>_ v<span style="color: #696969;">]</span>
+                          <span style="color: #696969;">(</span>apply f <span style="color: #696969;">(</span>vec v<span style="color: #696969;">))))))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">objective-function-gradient</span> <span style="color: #696969;">[</span>f<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">ObjectiveFunctionGradient.</span> <span style="color: #696969;">(</span>reify <span style="color: #7CB8BB;">MultivariateVectorFunction</span>
+                                <span style="color: #696969;">(</span>value <span style="color: #696969;">[</span>_ v<span style="color: #696969;">]</span>
+                                  <span style="color: #696969;">(</span>double-array
+                                   <span style="color: #696969;">(</span>apply f <span style="color: #696969;">(</span>vec v<span style="color: #696969;">)))))))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-109">
+<h2 id="sec-109">Gradient Descent</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">make-ncg-optimizer</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">NonLinearConjugateGradientOptimizer.</span>
+   <span style="color: #7CB8BB;">NonLinearConjugateGradientOptimizer$Formula</span>/<span style="color: #BFEBBF;">FLETCHER_REEVES</span>
+   <span style="color: #696969;">(</span><span style="color: #7CB8BB;">SimpleValueChecker.</span> <span style="color: #696969;">(</span>double 1e-6<span style="color: #696969;">)</span> <span style="color: #696969;">(</span>double 1e-6<span style="color: #696969;">))))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">initial-guess</span> <span style="color: #696969;">[</span>guess<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">InitialGuess.</span> <span style="color: #696969;">(</span>double-array guess<span style="color: #696969;">)))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">max-evaluations</span> <span style="color: #696969;">[</span>n<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">MaxEval.</span> n<span style="color: #696969;">))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">gradient-descent</span> <span style="color: #696969;">[</span>f g estimate n<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>options <span style="color: #696969;">(</span>into-array <span style="color: #7CB8BB;">OptimizationData</span>
+                            <span style="color: #696969;">[</span><span style="color: #696969;">(</span>objective-function f<span style="color: #696969;">)</span>
+                             <span style="color: #696969;">(</span>objective-function-gradient g<span style="color: #696969;">)</span>
+                             <span style="color: #696969;">(</span>initial-guess estimate<span style="color: #696969;">)</span>
+                             <span style="color: #696969;">(</span>max-evaluations n<span style="color: #696969;">)</span>
+                             <span style="color: #7CB8BB;">GoalType</span>/<span style="color: #BFEBBF;">MINIMIZE</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span>make-ncg-optimizer<span style="color: #696969;">)</span>
+        <span style="color: #696969;">(</span><span style="color: #94BFF3;">.optimize</span> options<span style="color: #696969;">)</span>
+        <span style="color: #696969;">(</span><span style="color: #94BFF3;">.getPoint</span><span style="color: #696969;">)</span>
+        <span style="color: #696969;">(</span>vec<span style="color: #696969;">))))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-110">
+<h2 id="sec-110">Running Gradient Descent</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">run-logistic-regression</span> <span style="color: #696969;">[</span>data initial-guess<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>points <span style="color: #696969;">(</span>titanic-features<span style="color: #696969;">)</span>
+        xs <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> points <span style="color: #696969;">(</span>map rest<span style="color: #696969;">)</span> <span style="color: #696969;">(</span>map #<span style="color: #696969;">(</span>cons 1 <span style="color: #DFAF8F;">%</span><span style="color: #696969;">)))</span>
+        ys <span style="color: #696969;">(</span>map first points<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+
+    <span style="color: #696969;">(</span>gradient-descent
+     <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[</span>&amp; theta<span style="color: #696969;">]</span>
+       <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>f <span style="color: #696969;">(</span>logistic-function theta<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+         <span style="color: #696969;">(</span>logistic-cost <span style="color: #696969;">(</span>map f xs<span style="color: #696969;">)</span> ys<span style="color: #696969;">)))</span>
+     <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[</span>&amp; theta<span style="color: #696969;">]</span>
+       <span style="color: #696969;">(</span>gradient-fn <span style="color: #696969;">(</span>logistic-function theta<span style="color: #696969;">)</span> xs ys<span style="color: #696969;">))</span>
+     initial-guess
+     2000<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-111">
+<h2 id="sec-111">Producing a model</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-5-11</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span>titanic-features<span style="color: #696969;">)</span>
+        initial-guess <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> data first count <span style="color: #696969;">(</span>take <span style="color: #696969;">(</span>repeatedly rand<span style="color: #696969;">)))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>run-logistic-regression data initial-guess<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-112">
+<h2 id="sec-112">Making predictions</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #DFAF8F;">logistic-theta</span>
+  <span style="color: #696969;">[</span>0.9884451497898937 -0.9582211820237765 -0.2942204909975665
+   -0.008340184840488646 -0.03219717794854576 2.6351942087729614
+   0.5946571788582461 1.2192345883060776 0.6481382214058901<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">round</span> <span style="color: #696969;">[</span>x<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">Math</span>/round x<span style="color: #696969;">))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #DFAF8F;">logistic-model</span>
+  <span style="color: #696969;">(</span>logistic-function logistic-theta<span style="color: #696969;">))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-5-13</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span>titanic-features<span style="color: #696969;">)</span>
+        test <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[</span>x<span style="color: #696969;">]</span>
+               <span style="color: #696969;">(</span>= <span style="color: #696969;">(</span>round <span style="color: #696969;">(</span>logistic-model <span style="color: #696969;">(</span>cons 1 <span style="color: #696969;">(</span>rest x<span style="color: #696969;">))))</span>
+                  <span style="color: #696969;">(</span>round <span style="color: #696969;">(</span>first x<span style="color: #696969;">))))</span>
+        results <span style="color: #696969;">(</span>frequencies <span style="color: #696969;">(</span>map test data<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>/ <span style="color: #696969;">(</span>get results <span style="color: #BFEBBF;">true</span><span style="color: #696969;">)</span>
+       <span style="color: #696969;">(</span>apply + <span style="color: #696969;">(</span>vals results<span style="color: #696969;">)))))</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; 1028/1309</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-113">
+<h2 id="sec-113">Evaluating the classifier</h2>
+<p>
+<b>Cross-validation</b>: we want to separate our test and training data sets
+</p>
+
+<p>
+<b>Bias vs variance</b>: your model may fail to generalise
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-114">
+<h2 id="sec-114">Clustering</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-115">
+<h2 id="sec-115">Clustering</h2>
+<p>
+Find a grouping of a set of objects such that objects in the same group are more similar to each other than those in other groups.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-116">
+<h2 id="sec-116">Similarity measures</h2>
+<p>
+Many to choose from: Jaccard, Euclidean.
+</p>
+
+<p>
+For text documents the <b>Cosine</b> measure is often chosen.
+</p>
+
+<ul>
+<li>Good for high-dimensional spaces</li>
+<li>Positive spaces the similarity is between 0 and 1.</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-117">
+<h2 id="sec-117">Cosine similarity</h2>
+<p>
+$${ cos( \theta ) = { A \cdot B \over \| A \| \| B \| } }$$
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">cosine</span> <span style="color: #696969;">[</span>a b<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>dot-product <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>map * a b<span style="color: #696969;">)</span>
+                         <span style="color: #696969;">(</span>apply +<span style="color: #696969;">))</span>
+        magnitude <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[</span>d<span style="color: #696969;">]</span>
+                    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>map #<span style="color: #696969;">(</span><span style="color: #7CB8BB;">Math</span>/pow <span style="color: #DFAF8F;">%</span> 2<span style="color: #696969;">)</span> d<span style="color: #696969;">)</span>
+                         <span style="color: #696969;">(</span>apply +<span style="color: #696969;">)</span>
+                         <span style="color: #7CB8BB;">Math</span>/sqrt<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>/ dot-product
+       <span style="color: #696969;">(</span>* <span style="color: #696969;">(</span>magnitude a<span style="color: #696969;">)</span> <span style="color: #696969;">(</span>magnitude b<span style="color: #696969;">)))))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-118">
+<h2 id="sec-118">Creating sparse vectors</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #DFAF8F;">dictionary</span>
+  <span style="color: #696969;">(</span>atom <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:count</span> 0
+         <span style="color: #BFEBBF;">:words</span> <span style="color: #696969;">{}}</span><span style="color: #696969;">))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">add-word-to-dict</span> <span style="color: #696969;">[</span>dict word<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">if</span> <span style="color: #696969;">(</span>get-in dict <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:words</span> word<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+    dict
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> dict
+        <span style="color: #696969;">(</span>update-in <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:words</span><span style="color: #696969;">]</span> assoc word <span style="color: #696969;">(</span>get dict <span style="color: #BFEBBF;">:count</span><span style="color: #696969;">))</span>
+        <span style="color: #696969;">(</span>update-in <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:count</span><span style="color: #696969;">]</span> inc<span style="color: #696969;">))))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">update-words</span> <span style="color: #696969;">[</span>dict doc word<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>word-id <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span>swap! dict add-word-to-dict word<span style="color: #696969;">)</span>
+                    <span style="color: #696969;">(</span>get-in <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:words</span> word<span style="color: #696969;">]</span><span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>update-in doc <span style="color: #696969;">[</span>word-id<span style="color: #696969;">]</span> #<span style="color: #696969;">(</span>inc <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">or</span> <span style="color: #DFAF8F;">%</span> 0<span style="color: #696969;">)))))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">document-vector</span> <span style="color: #696969;">[</span>dict ngrams<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">r</span>/reduce <span style="color: #696969;">(</span>partial update-words dict<span style="color: #696969;">)</span> <span style="color: #696969;">{}</span> ngrams<span style="color: #696969;">))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-119">
+<h2 id="sec-119">Example</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>split <span style="color: #CC9393;">"the quick brown fox jumps over the lazy dog"</span> #<span style="color: #CC9393;">"\W"</span><span style="color: #696969;">)</span>
+     <span style="color: #696969;">(</span>document-vector dictionary<span style="color: #696969;">))</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; {7 1, 6 1, 5 1, 4 1, 3 1, 2 1, 1 1, 0 2}</span>
+
+@dictionary
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; {:words {"dog" 7, "lazy" 6, "over" 5, "jumps" 4, "fox" 3, "brown" 2, "quick" 1, "the" 0}, :count 8}</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-120">
+<h2 id="sec-120">Stemming / Stopwords</h2>
+<p>
+<a href="http://clojars.org/stemmers">http://clojars.org/stemmers</a>
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #7CB8BB;">stemmer</span>/stems <span style="color: #CC9393;">"it's lovely that you're musical"</span><span style="color: #696969;">)</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; ("love" "music")</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-121">
+<h2 id="sec-121">Why?</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure">  <span style="color: #696969;">(</span>cosine-sparse
+   <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #CC9393;">"music is the food of love"</span>
+        <span style="color: #7CB8BB;">stemmer</span>/stems
+        <span style="color: #696969;">(</span>document-vector dictionary<span style="color: #696969;">))</span>
+   <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #CC9393;">"war is the locomotive of history"</span>
+        <span style="color: #7CB8BB;">stemmer</span>/stems
+        <span style="color: #696969;">(</span>document-vector dictionary<span style="color: #696969;">)))</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; 0.0</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure">  <span style="color: #696969;">(</span>cosine-sparse
+   <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #CC9393;">"music is the food of love"</span>
+        <span style="color: #7CB8BB;">stemmer</span>/stems
+        <span style="color: #696969;">(</span>document-vector dictionary<span style="color: #696969;">))</span>
+   <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #CC9393;">"it's lovely that you're musical"</span> <span style="color: #7CB8BB;">stemmer</span>/stems
+        <span style="color: #696969;">(</span>document-vector dictionary<span style="color: #696969;">)))</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; 0.8164965809277259</span>
+</pre>
+</div>
+
+
+</section>
+</section>
+<section>
+<section id="slide-sec-122">
+<h2 id="sec-122">Example</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #CC9393;">"it's lovely that you're musical"</span>
+     <span style="color: #7CB8BB;">stemmer</span>/stems
+     <span style="color: #696969;">(</span>document-vector dictionary<span style="color: #696969;">))</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; {0 1, 2 1}</span>
+
+@dictionary
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; {:count 6, :words {"histori" 5, "locomot" 4, "war" 3, "love" 2, "food" 1, "music" 0}}</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-123">
+<h2 id="sec-123">Mahout</h2>
+<p>
+<a href="http://mahout.apache.org/">http://mahout.apache.org/</a>
+</p>
+
+<p>
+"The Apache Mahout™ project's goal is to build an environment for quickly creating scalable preformant machine learning applications."
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-124">
+<h2 id="sec-124">Get the data</h2>
+<p>
+We're going to be clustering the Reuters dataset.
+</p>
+
+<p>
+Follow the readme instructions:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-bash">script/download-reuters.sh
+lein run -e 6.7
+mahout seqdirectory -i data/reuters-txt -o data/reuters-sequencefile
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-125">
+<h2 id="sec-125">Vector representation</h2>
+<p>
+Each document is converted into a vector representation.
+</p>
+
+<p>
+All vectors share a dictionary providing a unique index for each word.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-126">
+<h2 id="sec-126">Sequencefiles</h2>
+<p>
+Input:
+</p>
+<ul>
+<li>org.apache.hadoop.io.Text</li>
+<li>org.apache.hadoop.io.Text</li>
+
+</ul>
+
+<p>
+Output (Vectors):
+</p>
+<ul>
+<li>org.apache.hadoop.io.Text</li>
+<li>org.apache.mahout.math.VectorWritable</li>
+
+</ul>
+
+<p>
+Output (Dictionary):
+</p>
+<ul>
+<li>org.apache.hadoop.io.Text</li>
+<li>org.apache.mahout.math.IntWritable</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-127">
+<h2 id="sec-127">Parkour</h2>
+<p>
+Parkour is a Clojure library for interacting with Hadoop.
+</p>
+
+<p>
+It provides a thinner layer of abstraction than PigPen and Cascalog.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-128">
+<h2 id="sec-128">TF-IDF</h2>
+<p>
+Term frequency, inverse document frenquency.
+</p>
+
+<p>
+$${tfidf(t, d, D) = tf(t, d) \cdot idf(t, D) }$$
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-129">
+<h2 id="sec-129">We need a unique index for each word</h2>
+<p>
+We need a way of computing a unique index in parallel
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-130">
+<h2 id="sec-130">Parkour Mapping</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span>require '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">clojure.core.reducers</span> <span style="color: #BFEBBF;">:as</span> r<span style="color: #696969;">]</span>
+         '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">parkour.mapreduce</span> <span style="color: #BFEBBF;">:as</span> mr<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">document-&gt;terms</span> <span style="color: #696969;">[</span>doc<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">clojure.string</span>/split doc #<span style="color: #CC9393;">"\W+"</span><span style="color: #696969;">))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">document-count-m</span>
+  <span style="color: #9FC59F;">"Emits the unique words from each document"</span>
+  <span style="color: #696969;">{</span><span style="color: #BFEBBF;">::mr/source-as</span> <span style="color: #BFEBBF;">:vals</span><span style="color: #696969;">}</span>
+  <span style="color: #696969;">[</span>documents<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> documents
+       <span style="color: #696969;">(</span><span style="color: #7CB8BB;">r</span>/mapcat <span style="color: #696969;">(</span>comp distinct document-&gt;terms<span style="color: #696969;">))</span>
+       <span style="color: #696969;">(</span><span style="color: #7CB8BB;">r</span>/map #<span style="color: #696969;">(</span>vector <span style="color: #DFAF8F;">%</span> 1<span style="color: #696969;">))))</span>
+</pre>
+</div>
+
+<p>
+Parkour uses Clojure's reducers.
+Can supply metadata informing Parkour how we'd like to receive our data.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-131">
+<h2 id="sec-131">Shape metadata</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #BFEBBF;">:keyvals</span> <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">Re-shape as vectors of key-vals pairs.</span>
+<span style="color: #BFEBBF;">:keys</span>  <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">Just the keys from each key-value pair.</span>
+<span style="color: #BFEBBF;">:vals</span> <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">Just the values from each key-value pair.</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-132">
+<h2 id="sec-132">Just normal functions</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure">  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span>  <span style="color: #696969;">(</span>document-count-m <span style="color: #696969;">[</span><span style="color: #CC9393;">"it's lovely that you're musical"</span>
+                           <span style="color: #CC9393;">"music is the food of love"</span>
+                           <span style="color: #CC9393;">"war is the locomotive of history"</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+        <span style="color: #696969;">(</span>into <span style="color: #696969;">[]</span><span style="color: #696969;">))</span>
+
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; [["love" 1] ["music" 1] ["music" 1] ["food" 1] ["love" 1] ["war" 1] ["locomot" 1] ["histori" 1]]</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-133">
+<h2 id="sec-133">And reducing&#x2026;</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span>require '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">parkour.io.dux</span> <span style="color: #BFEBBF;">:as</span> dux<span style="color: #696969;">]</span>
+         '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">transduce.reducers</span> <span style="color: #BFEBBF;">:as</span> tr<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">unique-index-r</span>
+  <span style="color: #696969;">{</span><span style="color: #BFEBBF;">::mr/source-as</span> <span style="color: #BFEBBF;">:keyvalgroups</span>, <span style="color: #BFEBBF;">::mr/sink-as</span> <span style="color: #7CB8BB;">dux</span>/named-keyvals<span style="color: #696969;">}</span>
+  <span style="color: #696969;">[</span>coll<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>global-offset <span style="color: #696969;">(</span><span style="color: #7CB8BB;">conf</span>/get-long <span style="color: #7CB8BB;">mr</span>/*context* <span style="color: #CC9393;">"mapred.task.partition"</span> -1<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">tr</span>/mapcat-state
+     <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[</span>local-offset <span style="color: #696969;">[</span>word counts<span style="color: #696969;">]]</span>
+       <span style="color: #696969;">[</span><span style="color: #696969;">(</span>inc local-offset<span style="color: #696969;">)</span>
+        <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">if</span> <span style="color: #696969;">(</span>identical? <span style="color: #BFEBBF;">::finished</span> word<span style="color: #696969;">)</span>
+          <span style="color: #696969;">[[</span><span style="color: #BFEBBF;">:counts</span> <span style="color: #696969;">[</span>global-offset local-offset<span style="color: #696969;">]]]</span>
+          <span style="color: #696969;">[[</span><span style="color: #BFEBBF;">:data</span> <span style="color: #696969;">[</span>word <span style="color: #696969;">[[</span>global-offset local-offset<span style="color: #696969;">]</span> <span style="color: #696969;">(</span>apply + counts<span style="color: #696969;">)</span><span style="color: #696969;">]]]]</span><span style="color: #696969;">)</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+     0 <span style="color: #696969;">(</span><span style="color: #7CB8BB;">r</span>/mapcat identity <span style="color: #696969;">[</span>coll <span style="color: #696969;">[[</span><span style="color: #BFEBBF;">::finished</span> <span style="color: #BFEBBF;">nil</span><span style="color: #696969;">]]]</span><span style="color: #696969;">))))</span>
+</pre>
+</div>
+
+<p>
+We have access to the MapReduce context, can get the partition number
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-134">
+<h2 id="sec-134">Creating a job</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span>require '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">parkour.graph</span> <span style="color: #BFEBBF;">:as</span> pg<span style="color: #696969;">]</span>
+         '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">parkour.avro</span> <span style="color: #BFEBBF;">:as</span> mra<span style="color: #696969;">]</span>
+         '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">abracad.avro</span> <span style="color: #BFEBBF;">:as</span> avro<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #DFAF8F;">long-pair</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">avro</span>/tuple-schema <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:long</span> <span style="color: #BFEBBF;">:long</span><span style="color: #696969;">]</span><span style="color: #696969;">))</span>
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #DFAF8F;">index-value</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">avro</span>/tuple-schema <span style="color: #696969;">[</span>long-pair <span style="color: #BFEBBF;">:long</span><span style="color: #696969;">]</span><span style="color: #696969;">))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">df-j</span> <span style="color: #696969;">[</span>dseq<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/input dseq<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/map #'document-count-m<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/partition <span style="color: #696969;">(</span><span style="color: #7CB8BB;">mra</span>/shuffle <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:string</span> <span style="color: #BFEBBF;">:long</span><span style="color: #696969;">]</span><span style="color: #696969;">))</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/reduce #'unique-index-r<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/output <span style="color: #BFEBBF;">:data</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">mra</span>/dsink <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:string</span> index-value<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+                 <span style="color: #BFEBBF;">:counts</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">mra</span>/dsink <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:long</span> <span style="color: #BFEBBF;">:long</span><span style="color: #696969;">]</span><span style="color: #696969;">))))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-135">
+<h2 id="sec-135">Writing to Distributed Cache</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span>require '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">parkour.io.dval</span> <span style="color: #BFEBBF;">:as</span> dval<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">calculate-offsets</span>
+  <span style="color: #9FC59F;">"Build map of offsets from dseq of counts."</span>
+  <span style="color: #696969;">[</span>dseq<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> dseq
+       <span style="color: #696969;">(</span>into <span style="color: #696969;">[]</span><span style="color: #696969;">)</span>
+       <span style="color: #696969;">(</span>sort-by first<span style="color: #696969;">)</span>
+       <span style="color: #696969;">(</span>reductions <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[[</span>_ t<span style="color: #696969;">]</span> <span style="color: #696969;">[</span>i n<span style="color: #696969;">]]</span>
+                     <span style="color: #696969;">[</span><span style="color: #696969;">(</span>inc i<span style="color: #696969;">)</span> <span style="color: #696969;">(</span>+ t n<span style="color: #696969;">)</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+                   <span style="color: #696969;">[</span>0 0<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+       <span style="color: #696969;">(</span>into <span style="color: #696969;">{}</span><span style="color: #696969;">)))</span>
+
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">df-execute</span> <span style="color: #696969;">[</span>conf dseq<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[[</span>df-data df-counts<span style="color: #696969;">]</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/execute <span style="color: #696969;">(</span>df-j dseq<span style="color: #696969;">)</span> conf `df<span style="color: #696969;">)</span>
+        offsets-dval <span style="color: #696969;">(</span><span style="color: #7CB8BB;">dval</span>/edn-dval <span style="color: #696969;">(</span>calculate-offsets df-counts<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+    ...<span style="color: #696969;">))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-136">
+<h2 id="sec-136">Reading from distributed cache</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">global-id</span>
+  <span style="color: #9FC59F;">"Use offsets to calculate unique id from global and local offset"</span>
+  <span style="color: #696969;">[</span>offsets <span style="color: #696969;">[</span>global-offset local-offset<span style="color: #696969;">]]</span>
+  <span style="color: #696969;">(</span>+ local-offset <span style="color: #696969;">(</span>get offsets global-offset<span style="color: #696969;">)))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">words-idf-m</span>
+  <span style="color: #9FC59F;">"Calculate the unique id and inverse document frequency for each word"</span>
+  <span style="color: #696969;">{</span><span style="color: #BFEBBF;">::mr/sink-as</span> <span style="color: #BFEBBF;">:keys</span><span style="color: #696969;">}</span>
+  <span style="color: #696969;">[</span>offsets-dval n coll<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>offsets @offsets-dval<span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">r</span>/map
+     <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">fn</span> <span style="color: #696969;">[[</span>word <span style="color: #696969;">[</span>word-offset df<span style="color: #696969;">]]]</span>
+       <span style="color: #696969;">[</span>word <span style="color: #696969;">(</span>global-id offsets word-offset<span style="color: #696969;">)</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">Math</span>/log <span style="color: #696969;">(</span>/ n df<span style="color: #696969;">))</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+     coll<span style="color: #696969;">)))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">make-dictionary</span> <span style="color: #696969;">[</span>conf df-data df-counts doc-count<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>offsets-dval <span style="color: #696969;">(</span><span style="color: #7CB8BB;">dval</span>/edn-dval <span style="color: #696969;">(</span>calculate-offsets df-counts<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/input df-data<span style="color: #696969;">)</span>
+        <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/map #'words-idf-m offsets-dval doc-count<span style="color: #696969;">)</span>
+        <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/output <span style="color: #696969;">(</span><span style="color: #7CB8BB;">mra</span>/dsink <span style="color: #696969;">[</span>words<span style="color: #696969;">]</span><span style="color: #696969;">))</span>
+        <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/fexecute conf `idf<span style="color: #696969;">)</span>
+        <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">r</span>/map parse-idf<span style="color: #696969;">)</span>
+             <span style="color: #696969;">(</span>into <span style="color: #696969;">{}</span><span style="color: #696969;">))</span>
+        <span style="color: #696969;">(</span><span style="color: #7CB8BB;">dval</span>/edn-dval<span style="color: #696969;">))))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-137">
+<h2 id="sec-137">Creating text vectors</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">import</span> '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.mahout.math</span> <span style="color: #7CB8BB;">RandomAccessSparseVector</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">create-sparse-vector</span> <span style="color: #696969;">[</span>dictionary <span style="color: #696969;">[</span>id doc<span style="color: #696969;">]]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>vector <span style="color: #696969;">(</span><span style="color: #7CB8BB;">RandomAccessSparseVector.</span> <span style="color: #696969;">(</span>count dictionary<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">doseq</span> <span style="color: #696969;">[[</span>term freq<span style="color: #696969;">]</span> <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> doc document-&gt;terms frequencies<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+      <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>term-info <span style="color: #696969;">(</span>get dictionary term<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+        <span style="color: #696969;">(</span><span style="color: #94BFF3;">.setQuick</span> vector <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:id</span> term-info<span style="color: #696969;">)</span> <span style="color: #696969;">(</span>* freq <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:idf</span> term-info<span style="color: #696969;">)))))</span>
+    <span style="color: #696969;">[</span>id vector<span style="color: #696969;">]</span><span style="color: #696969;">))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">create-vectors-m</span> <span style="color: #696969;">[</span>dictionary coll<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>dictionary @dictionary<span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">r</span>/map #<span style="color: #696969;">(</span>create-sparse-vector dictionary <span style="color: #DFAF8F;">%</span><span style="color: #696969;">)</span> coll<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-138">
+<h2 id="sec-138">The finished job</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">import</span> '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.hadoop.io</span> <span style="color: #7CB8BB;">Text</span><span style="color: #696969;">]</span>
+        '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.mahout.math</span> <span style="color: #7CB8BB;">VectorWritable</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">tfidf</span> <span style="color: #696969;">[</span>conf dseq dictionary-path vector-path<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>doc-count <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> dseq <span style="color: #696969;">(</span>into <span style="color: #696969;">[]</span><span style="color: #696969;">)</span> count<span style="color: #696969;">)</span>
+        <span style="color: #696969;">[</span>df-data df-counts<span style="color: #696969;">]</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/execute <span style="color: #696969;">(</span>df-j dseq<span style="color: #696969;">)</span> conf `df<span style="color: #696969;">)</span>
+        dictionary-dval <span style="color: #696969;">(</span>make-dictionary conf df-data df-counts doc-count<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>write-dictionary dictionary-path dictionary-dval<span style="color: #696969;">)</span>
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/input dseq<span style="color: #696969;">)</span>
+        <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/map #'create-vectors-m dictionary-dval<span style="color: #696969;">)</span>
+        <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/output <span style="color: #696969;">(</span><span style="color: #7CB8BB;">seqf</span>/dsink <span style="color: #696969;">[</span><span style="color: #7CB8BB;">Text</span> <span style="color: #7CB8BB;">VectorWritable</span><span style="color: #696969;">]</span> vector-path<span style="color: #696969;">))</span>
+        <span style="color: #696969;">(</span><span style="color: #7CB8BB;">pg</span>/fexecute conf `vectorize<span style="color: #696969;">))))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">tool</span> <span style="color: #696969;">[</span>conf input output<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>dseq <span style="color: #696969;">(</span><span style="color: #7CB8BB;">seqf</span>/dseq input<span style="color: #696969;">)</span>
+        dictionary-path <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">doto</span> <span style="color: #696969;">(</span>str output <span style="color: #CC9393;">"/dictionary"</span><span style="color: #696969;">)</span> <span style="color: #7CB8BB;">fs</span>/path-delete<span style="color: #696969;">)</span>
+        vector-path <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">doto</span> <span style="color: #696969;">(</span>str output <span style="color: #CC9393;">"/vectors"</span><span style="color: #696969;">)</span> <span style="color: #7CB8BB;">fs</span>/path-delete<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>tfidf conf dseq dictionary-path vector-path<span style="color: #696969;">)))</span>
+
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">-main</span> <span style="color: #696969;">[</span>&amp; args<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">System</span>/exit <span style="color: #696969;">(</span><span style="color: #7CB8BB;">tool</span>/run tool args<span style="color: #696969;">)))</span>
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-139">
+<h2 id="sec-139">K-Means</h2>
+</section>
+</section>
+<section>
+<section id="slide-sec-140">
+<h2 id="sec-140">K-Means</h2>
+
+<div class="figure">
+<p><img src="./images/kmeans.png" alt="kmeans.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-141">
+<h2 id="sec-141">Running clustering</h2>
+<p>
+script/run-kmeans.sh
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-bash">#!/bin/bash
+
+WORK_DIR=data
+INPUT_DIR=${WORK_DIR}/parkour-vectors
+
+mahout kmeans \
+    -i ${INPUT_DIR}/vectors \
+    -c ${WORK_DIR}/clusters-out \
+    -o ${WORK_DIR}/kmeans-out \
+    -dm org.apache.mahout.common.distance.CosineDistanceMeasure \
+    -x 20 -k 5 -cd 0.01 -ow --clustering
+
+mahout clusterdump \
+    -i ${WORK_DIR}/kmeans-out/clusters-*-final \
+    -o ${WORK_DIR}/clusterdump.txt \
+    -d ${INPUT_DIR}/dictionary/part-r-00000 \
+    -dt sequencefile \
+    -dm org.apache.mahout.common.distance.CosineDistanceMeasure \
+    --pointsDir ${WORK_DIR}/kmeans-out/clusteredPoints \
+    -b 100 -n 20 -sp 0 -e
+</pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-142">
+<h2 id="sec-142">How many clusters?</h2>
+
+<div class="figure">
+<p><img src="./images/cluster-ambiguity.png" alt="cluster-ambiguity.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-143">
+<h2 id="sec-143">What did I leave out?</h2>
+<ul>
+<li>Spectral and LDA clustering</li>
+<li>Cluster quality measures</li>
+<li>Collaborative filtering with Mahout</li>
+<li>Spark for movie recommendations with Sparkling</li>
+<li>Graph data with Loom and Datomic</li>
+<li>MapReduce with Cascalog and PigPen</li>
+<li>Adapting algorithms for massive scale</li>
+<li>Time series and forecasting</li>
+<li>Dimensionality reduction</li>
+<li>More visualisation techniques</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-144">
+<h2 id="sec-144">Book</h2>
+<p>
+Clojure for Data Science will be available in the second half of the year from <a href="http://packtpub.com">http://packtpub.com</a>.
+</p>
+
+<p>
+<a href="http://cljds.com">http://cljds.com</a>
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-145">
+<h2 id="sec-145">Slides</h2>
+<p>
+<a href="http://github.com/clojuredatascience/bristol-clojurians-april-2015">http://github.com/clojuredatascience/bristol-clojurians-april-2015</a>
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-146">
+<h2 id="sec-146">Thank you!</h2>
+<p>
+Henry Garner
+</p>
+
+<p>
+@henrygarner
+</p>
+</section>
+</section>
+</div>
+</div>
+
+<script src="./reveal.js/lib/js/head.min.js"></script>
+<script src="./reveal.js/js/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+
+controls: false,
+progress: false,
+history: true,
+center: true,
+slideNumber: true,
+rollingLinks: false,
+keyboard: true,
+overview: true,
+
+theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+transition: Reveal.getQueryHash().transition || 'fade', // default/cube/page/concave/zoom/linear/fade/none
+transitionSpeed: 'default',
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: './reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: './reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: './reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: './reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+ { src: './reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: './reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+]
+});
+</script>
+</body>
+</html>
