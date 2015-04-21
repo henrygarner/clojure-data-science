@@ -18,7 +18,7 @@
         document.getElementsByTagName( 'head' )[0].appendChild( link );
     }
 </script>
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/javascript" src="MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 </head>
 <body>
 <div class="reveal">
@@ -32,9 +32,9 @@
 
 <section>
 <section id="slide-sec-1">
-<h2 id="sec-1">Why me?</h2>
+<h2 id="sec-1">Why am I giving this talk?</h2>
 <p>
-I am in the final stages of producing a book "Clojure for Data Science".
+I am in the final stages of writing <b>Clojure for Data Science</b>.
 </p>
 
 <p>
@@ -59,34 +59,17 @@ I am a software engineer, not a statistician.
 <section>
 <section id="slide-sec-3">
 <h2 id="sec-3">Data Science Venn</h2>
-<p>
-"Once you have acquired and cleaned the data, the next step is to actually extract insight from it. In order to do this, you need to apply appropriate math and statistics methods, which requires at least a baseline familiarity with these tools. This is not to say that a PhD in statistics in required to be a competent data scientist, but it does require knowing what an ordinary least squares regression is and how to interpret it"
-</p>
-
-<p>
--Drew Conway
-</p>
-
-</section>
-</section>
-<section>
-<section id="slide-sec-4">
-<h2 id="sec-4">Data Science Venn</h2>
 
 <div class="figure">
 <p><img src="./images/data_science_venn.png" alt="data_science_venn.png" />
 </p>
 </div>
 
-<p>
-Drew Conway
-</p>
-
 </section>
 </section>
 <section>
-<section id="slide-sec-5">
-<h2 id="sec-5">Why is data science important?</h2>
+<section id="slide-sec-4">
+<h2 id="sec-4">Why is data science important?</h2>
 <p>
 The robots are coming!
 </p>
@@ -102,43 +85,45 @@ These trends influence the kinds of systems we are all expected to build.
 </section>
 </section>
 <section>
-<section id="slide-sec-6">
-<h2 id="sec-6">Why Clojure?</h2>
+<section id="slide-sec-5">
+<h2 id="sec-5">Why Clojure?</h2>
 <p>
-Clojure lends itself to interactive exploration.
+Clojure lends itself to interactive exploration and learning.
 </p>
 
 <p>
-It's fantastic for manipulating data.
+It has fantastic data manipulating abstractions.
 </p>
 
 <p>
-The JVM provides hosts many of the workhorse data processing frameworks.
+The JVM hosts many of the workhorse data storage and processing frameworks.
 </p>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-7">
-<h2 id="sec-7">What I will talk about</h2>
+<section id="slide-sec-6">
+<h2 id="sec-6">What I will cover</h2>
 <ul>
 <li>Distributions</li>
 <li>Statistics</li>
-<li>Correlation</li>
 <li>Visualisation with Quil</li>
+<li>Correlation</li>
 <li>Linear regression</li>
 <li>Multivariate linear regression with Incanter</li>
+<li><b>Break</b></li>
+<li>Categorical data</li>
 <li>Bayes classification</li>
 <li>Logistic regression with Apache Commons Math</li>
-<li>Clustering with Parkour</li>
+<li>Clustering with Parkour and Apache Mahout</li>
 
 </ul>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-8">
-<h2 id="sec-8">Follow along</h2>
+<section id="slide-sec-7">
+<h2 id="sec-7">Follow along</h2>
 <p>
 The book's GitHub is available at <a href="http://github.com/clojuredatascience">http://github.com/clojuredatascience</a>
 </p>
@@ -155,14 +140,14 @@ The book's GitHub is available at <a href="http://github.com/clojuredatascience"
 </section>
 </section>
 <section>
-<section id="slide-sec-9">
-<h2 id="sec-9">Part 1: Spotting election fraud</h2>
+<section id="slide-sec-8">
+<h2 id="sec-8">Part 1: Spotting election fraud</h2>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-10">
-<h2 id="sec-10">Loading data</h2>
+<section id="slide-sec-9">
+<h2 id="sec-9">Loading UK Election data</h2>
 <p>
 Using incanter's excel namespace
 </p>
@@ -191,13 +176,29 @@ Using incanter's excel namespace
 </section>
 </section>
 <section>
+<section id="slide-sec-10">
+<h2 id="sec-10">If you're following along</h2>
+<div class="org-src-container">
+
+<pre  class="src src-bash">git clone git@github.com:clojuredatascience/ch1-introduction.git
+
+cd ch1-introduction
+
+script/download-data.sh
+
+lein run -e 1.1
+</pre>
+</div>
+
+</section>
+</section>
+<section>
 <section id="slide-sec-11">
 <h2 id="sec-11">Column names</h2>
 <div class="org-src-container">
 
-<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/view <span style="color: #696969;">(</span>uk-data<span style="color: #696969;">))</span>
-
-<span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/col-names <span style="color: #696969;">(</span>uk-data<span style="color: #696969;">))</span>
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-1-1</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/col-names <span style="color: #696969;">(</span>uk-data<span style="color: #696969;">)))</span>
 
 <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; ["Press Association Reference" "Constituency Name" "Region" "Election Year" "Electorate" "Votes" "AC" "AD" "AGS" "APNI" "APP" "AWL" "AWP" "BB" "BCP" "Bean" "Best" "BGPV" "BIB" "BIC" "Blue" "BNP" "BP Elvis" "C28" "Cam Soc" "CG" "Ch M" "Ch P" "CIP" "CITY" "CNPG" "Comm" "Comm L" "Con" "Cor D" "CPA" "CSP" "CTDP" "CURE" "D Lab" "D Nat" "DDP" "DUP" "ED" "EIP" "EPA" "FAWG" "FDP" "FFR" "Grn" "GSOT" "Hum" "ICHC" "IEAC" "IFED" "ILEU" "Impact" "Ind1" "Ind2" "Ind3" "Ind4" "Ind5" "IPT" "ISGB" "ISQM" "IUK" "IVH" "IZB" "JAC" "Joy" "JP" "Lab" "Land" "LD" "Lib" "Libert" "LIND" "LLPB" "LTT" "MACI" "MCP" "MEDI" "MEP" "MIF" "MK" "MPEA" "MRLP" "MRP" "Nat Lib" "NCDV" "ND" "New" "NF" "NFP" "NICF" "Nobody" "NSPS" "PBP" "PC" "Pirate" "PNDP" "Poet" "PPBF" "PPE" "PPNV" "Reform" "Respect" "Rest" "RRG" "RTBP" "SACL" "Sci" "SDLP" "SEP" "SF" "SIG" "SJP" "SKGP" "SMA" "SMRA" "SNP" "Soc" "Soc Alt" "Soc Dem" "Soc Lab" "South" "Speaker" "SSP" "TF" "TOC" "Trust" "TUSC" "TUV" "UCUNF" "UKIP" "UPS" "UV" "VCCA" "Vote" "Wessex Reg" "WRP" "You" "Youth" "YRDPL"]</span>
 </pre>
@@ -263,9 +264,10 @@ Using incanter's excel namespace
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span>require '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">incanter.charts</span> <span style="color: #BFEBBF;">:as</span> c<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
 
-<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span>uk-electorate<span style="color: #696969;">)</span>
-    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">c</span>/histogram <span style="color: #BFEBBF;">:nbins</span> 20<span style="color: #696969;">)</span>
-    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/view<span style="color: #696969;">))</span>
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-1-11</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span>uk-electorate<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">c</span>/histogram <span style="color: #BFEBBF;">:nbins</span> 20<span style="color: #696969;">)</span>
+      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/view<span style="color: #696969;">)))</span>
 </pre>
 </div>
 
@@ -274,7 +276,6 @@ Using incanter's excel namespace
 <p><img src="./images/histogram.png" alt="histogram.png" />
 </p>
 </div>
-
 
 </section>
 </section>
@@ -291,8 +292,6 @@ Using incanter's excel namespace
 </p>
 </div>
 
-
-
 </section>
 </section>
 <section>
@@ -307,7 +306,7 @@ He discovered that the weights of the bread followed a normal distribution, but 
 </p>
 
 <p>
-The next year Poincaré continued to weigh his bread from the same baker, who was now wary of giving him the lighter loaves. After a year the mean loaf weight was 1kg, but this time the distribution was skewed to the left. This is consistent with the baker giving Poincaré only the heaviest of his loaves. The baker was reported to the authorities again
+The next year Poincaré continued to weigh his bread from the same baker, who was now wary of giving him the lighter loaves. After a year the mean loaf weight was 1kg, but this time the distribution had a positive skew. This is consistent with the baker giving Poincaré only the heaviest of his loaves. The baker was reported to the authorities again
 </p>
 
 </section>
@@ -368,7 +367,7 @@ The next year Poincaré continued to weigh his bread from the same baker, who wa
 <section id="slide-sec-20">
 <h2 id="sec-20">The importance of visualisation</h2>
 <p>
-Anscombe's Quartet: all have identical mean and standard deviation.
+Anscombe's Quartet: all have identical mean and variance.
 </p>
 
 
@@ -416,14 +415,15 @@ Anscombe's Quartet: all have identical mean and standard deviation.
 <h2 id="sec-23">Two variables: scatter plots!</h2>
 <div class="org-src-container">
 
-<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>uk-data<span style="color: #696969;">)</span>
-                <span style="color: #696969;">(</span>clean-uk-data<span style="color: #696969;">)</span>
-                <span style="color: #696969;">(</span>derive-uk-data<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
-  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">c</span>/scatter-plot <span style="color: #696969;">(</span>$ <span style="color: #CC9393;">"Turnout"</span> data<span style="color: #696969;">)</span>
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-1-33</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>uk-data<span style="color: #696969;">)</span>
+                  <span style="color: #696969;">(</span>clean-uk-data<span style="color: #696969;">)</span>
+                  <span style="color: #696969;">(</span>derive-uk-data<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span>scatter-plot <span style="color: #696969;">(</span>$ <span style="color: #CC9393;">"Turnout"</span> data<span style="color: #696969;">)</span>
                       <span style="color: #696969;">(</span>$ <span style="color: #CC9393;">"Victors Share"</span> data<span style="color: #696969;">)</span>
                       <span style="color: #BFEBBF;">:x-label</span> <span style="color: #CC9393;">"Turnout"</span>
                       <span style="color: #BFEBBF;">:y-label</span> <span style="color: #CC9393;">"Victor's Share"</span><span style="color: #696969;">)</span>
-      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/view<span style="color: #696969;">)))</span>
+        <span style="color: #696969;">(</span>view<span style="color: #696969;">))))</span>
 </pre>
 </div>
 
@@ -475,9 +475,10 @@ Anscombe's Quartet: all have identical mean and standard deviation.
                        <span style="color: #696969;">(</span>min max-bin<span style="color: #696969;">)))</span><span style="color: #696969;">]</span>
     <span style="color: #696969;">(</span>map bin-fn xs<span style="color: #696969;">)))</span>
 
-<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>uk-electorate<span style="color: #696969;">)</span>
-     <span style="color: #696969;">(</span>bin 10<span style="color: #696969;">)</span>
-     <span style="color: #696969;">(</span>frequencies<span style="color: #696969;">))</span>
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-1-10</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>uk-electorate<span style="color: #696969;">)</span>
+       <span style="color: #696969;">(</span>bin 10<span style="color: #696969;">)</span>
+       <span style="color: #696969;">(</span>frequencies<span style="color: #696969;">)))</span>
 
 <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; {0 1, 1 1, 2 4, 3 22, 4 130, 5 320, 6 156, 7 15, 9 1}</span>
 </pre>
@@ -588,6 +589,12 @@ Interpolate between the colours of the spectrum.
 <section>
 <section id="slide-sec-33">
 <h2 id="sec-33">A finished heatmap</h2>
+<div class="org-src-container">
+
+<pre  class="src src-bash">$&gt; lein run -e 1.36
+</pre>
+</div>
+
 
 <div class="figure">
 <p><img src="./images/ru-2d-heatmap.png" alt="ru-2d-heatmap.png" />
@@ -763,13 +770,24 @@ We can often only infer the population parameters.
 </section>
 <section>
 <section id="slide-sec-43">
-<h2 id="sec-43">Demo</h2>
+<h2 id="sec-43">Compile the cljs</h2>
+<div class="org-src-container">
+
+<pre  class="src src-bash">$&gt; lein cljsbuild once
+</pre>
+</div>
 
 </section>
 </section>
 <section>
 <section id="slide-sec-44">
-<h2 id="sec-44">Standard Error</h2>
+<h2 id="sec-44">Demo</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-45">
+<h2 id="sec-45">Standard Error</h2>
 <p>
 It's the standard deviation of the sample means.
 </p>
@@ -781,23 +799,34 @@ It's the standard deviation of the sample means.
 </section>
 </section>
 <section>
-<section id="slide-sec-45">
-<h2 id="sec-45">Standard Error</h2>
+<section id="slide-sec-46">
+<h2 id="sec-46">Standard Error</h2>
 <p>
-Let's see how the standard error changes with sample size
+Let's see how the standard error changes with sample size.
 </p>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-46">
-<h2 id="sec-46">Demo</h2>
+<section id="slide-sec-47">
+<h2 id="sec-47">Demo</h2>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-47">
-<h2 id="sec-47">Small samples</h2>
+<section id="slide-sec-48">
+<h2 id="sec-48">Standard deviation proportions</h2>
+
+<div class="figure">
+<p><img src="./images/standard-deviation-proportions.png" alt="standard-deviation-proportions.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-49">
+<h2 id="sec-49">Small samples</h2>
 <p>
 The standard error is calculated from the population standard deviation, but we don't know it!
 </p>
@@ -809,8 +838,8 @@ In practice they're assumed to be the same above around 30 samples, but there is
 </section>
 </section>
 <section>
-<section id="slide-sec-48">
-<h2 id="sec-48">T-distribution</h2>
+<section id="slide-sec-50">
+<h2 id="sec-50">T-distribution</h2>
 
 <div class="figure">
 <p><img src="./images/t-distribution.gif" alt="t-distribution.gif" />
@@ -820,8 +849,8 @@ In practice they're assumed to be the same above around 30 samples, but there is
 </section>
 </section>
 <section>
-<section id="slide-sec-49">
-<h2 id="sec-49">Calculating the t-statistic</h2>
+<section id="slide-sec-51">
+<h2 id="sec-51">Calculating the t-statistic</h2>
 <p>
 Based entirely on our sample statistics
 </p>
@@ -840,14 +869,14 @@ Based entirely on our sample statistics
 </section>
 </section>
 <section>
-<section id="slide-sec-50">
-<h2 id="sec-50">Demo</h2>
+<section id="slide-sec-52">
+<h2 id="sec-52">Demo</h2>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-51">
-<h2 id="sec-51">Why this interest in means?</h2>
+<section id="slide-sec-53">
+<h2 id="sec-53">Why this interest in means?</h2>
 <p>
 Because often when we want to know if a difference in populations is statistically significant, we'll compare the means.
 </p>
@@ -855,8 +884,8 @@ Because often when we want to know if a difference in populations is statistical
 </section>
 </section>
 <section>
-<section id="slide-sec-52">
-<h2 id="sec-52">Hypothesis testing</h2>
+<section id="slide-sec-54">
+<h2 id="sec-54">Hypothesis testing</h2>
 <p>
 By convention the data is assumed not to support what the researcher is looking for.
 </p>
@@ -872,8 +901,8 @@ The <i>alternate hypothesis</i>, \({h_1}\), can then only be supported with a gi
 </section>
 </section>
 <section>
-<section id="slide-sec-53">
-<h2 id="sec-53">Significance</h2>
+<section id="slide-sec-55">
+<h2 id="sec-55">Significance</h2>
 <p>
 The greater the significance of a result, the more certainty we have that the null hypothesis can be rejected.
 </p>
@@ -885,20 +914,20 @@ Let's use our range controller to adjust the significance threshold.
 </section>
 </section>
 <section>
-<section id="slide-sec-54">
-<h2 id="sec-54">Demo</h2>
-
-</section>
-</section>
-<section>
-<section id="slide-sec-55">
-<h2 id="sec-55">Prediction</h2>
-
-</section>
-</section>
-<section>
 <section id="slide-sec-56">
-<h2 id="sec-56">Question</h2>
+<h2 id="sec-56">Demo</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-57">
+<h2 id="sec-57">Prediction</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-58">
+<h2 id="sec-58">Question</h2>
 <p>
 What was Olympic swimmer Mark Spitz' competition weight?
 </p>
@@ -912,8 +941,8 @@ What was Olympic swimmer Mark Spitz' competition weight?
 </section>
 </section>
 <section>
-<section id="slide-sec-57">
-<h2 id="sec-57">Population of Olympic swimmers</h2>
+<section id="slide-sec-59">
+<h2 id="sec-59">Population of Olympic swimmers</h2>
 <p>
 The Guardian has helpfully provided data on the vital statistics of Olympians
 </p>
@@ -925,8 +954,8 @@ The Guardian has helpfully provided data on the vital statistics of Olympians
 </section>
 </section>
 <section>
-<section id="slide-sec-58">
-<h2 id="sec-58">Weight histogram</h2>
+<section id="slide-sec-60">
+<h2 id="sec-60">Weight histogram</h2>
 
 <div class="figure">
 <p><img src="./images/athlete-weight-histogram.png" alt="athlete-weight-histogram.png" />
@@ -936,8 +965,8 @@ The Guardian has helpfully provided data on the vital statistics of Olympians
 </section>
 </section>
 <section>
-<section id="slide-sec-59">
-<h2 id="sec-59">Log-Weight histogram</h2>
+<section id="slide-sec-61">
+<h2 id="sec-61">Log-Weight histogram</h2>
 
 <div class="figure">
 <p><img src="./images/athlete-logweight-histogram.png" alt="athlete-logweight-histogram.png" />
@@ -947,8 +976,8 @@ The Guardian has helpfully provided data on the vital statistics of Olympians
 </section>
 </section>
 <section>
-<section id="slide-sec-60">
-<h2 id="sec-60">Log-Normal distribution</h2>
+<section id="slide-sec-62">
+<h2 id="sec-62">Log-Normal distribution</h2>
 <p>
 "A variable might be modeled as log-normal if it can be thought of as the multiplicative product of many independent random variables, each of which is positive. This is justified by considering the central limit theorem in the log-domain."
 </p>
@@ -956,8 +985,8 @@ The Guardian has helpfully provided data on the vital statistics of Olympians
 </section>
 </section>
 <section>
-<section id="slide-sec-61">
-<h2 id="sec-61">Scatter Plot</h2>
+<section id="slide-sec-63">
+<h2 id="sec-63">Scatter Plot</h2>
 
 <div class="figure">
 <p><img src="./images/swimmer-height-weight-scatter.png" alt="swimmer-height-weight-scatter.png" />
@@ -967,17 +996,17 @@ The Guardian has helpfully provided data on the vital statistics of Olympians
 </section>
 </section>
 <section>
-<section id="slide-sec-62">
-<h2 id="sec-62">What is correlation anyway?</h2>
+<section id="slide-sec-64">
+<h2 id="sec-64">What is correlation anyway?</h2>
 <p>
-We've talked about variance in the context of the normal distribution
+We've talked about variance in the context of the normal distribution.
 </p>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-63">
-<h2 id="sec-63">Covariance</h2>
+<section id="slide-sec-65">
+<h2 id="sec-65">Covariance</h2>
 <p>
 How much things vary together!
 </p>
@@ -989,8 +1018,8 @@ How much things vary together!
 </section>
 </section>
 <section>
-<section id="slide-sec-64">
-<h2 id="sec-64">Correlation</h2>
+<section id="slide-sec-66">
+<h2 id="sec-66">Correlation</h2>
 <p>
 A few ways of measuring it, depending on whether your data is continuous or discrete
 </p>
@@ -1008,14 +1037,10 @@ A few ways of measuring it, depending on whether your data is continuous or disc
 </section>
 </section>
 <section>
-<section id="slide-sec-65">
-<h2 id="sec-65">Pearson's correlation</h2>
+<section id="slide-sec-67">
+<h2 id="sec-67">Pearson's correlation</h2>
 <p>
-Covarience divided by the product of standard deviations
-</p>
-
-<p>
-Measures linear correlation.
+Covariance divided by the product of standard deviations. It measures linear correlation.
 </p>
 
 <p>
@@ -1034,10 +1059,10 @@ Measures linear correlation.
 </section>
 </section>
 <section>
-<section id="slide-sec-66">
-<h2 id="sec-66">Pearson's correlation</h2>
+<section id="slide-sec-68">
+<h2 id="sec-68">Pearson's correlation</h2>
 <p>
-If \({r}\) is 0, it doesn’t necessarily mean that the variables are not correlated. Pearson’s correlation only measures linear relationships. There could still be some non-linear relationship between variables that isn’t captured by  as demonstrated by the following plots.
+If \({r}\) is 0, it doesn’t necessarily mean that the variables are not correlated. Pearson’s correlation only measures linear relationships.
 </p>
 
 
@@ -1049,8 +1074,8 @@ If \({r}\) is 0, it doesn’t necessarily mean that the variables are not correl
 </section>
 </section>
 <section>
-<section id="slide-sec-67">
-<h2 id="sec-67">This is a statistic</h2>
+<section id="slide-sec-69">
+<h2 id="sec-69">This is a statistic</h2>
 <p>
 The unknown population parameter for correlation is the Greek letter \({ \rho }\). We are only able to calculate the sample statistic \({ r }\).
 </p>
@@ -1071,8 +1096,8 @@ How far we can trust \({ r }\) as an estimate of \({ \rho }\) will depend on two
 </section>
 </section>
 <section>
-<section id="slide-sec-68">
-<h2 id="sec-68">Bivariate Regression</h2>
+<section id="slide-sec-70">
+<h2 id="sec-70">Bivariate Regression</h2>
 <p>
 \({y = \alpha + \beta x }\)
 </p>
@@ -1080,8 +1105,8 @@ How far we can trust \({ r }\) as an estimate of \({ \rho }\) will depend on two
 </section>
 </section>
 <section>
-<section id="slide-sec-69">
-<h2 id="sec-69">Bivariate Regression</h2>
+<section id="slide-sec-71">
+<h2 id="sec-71">Bivariate Regression</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">slope</span> <span style="color: #696969;">[</span>x y<span style="color: #696969;">]</span>
@@ -1101,8 +1126,8 @@ How far we can trust \({ r }\) as an estimate of \({ \rho }\) will depend on two
 </section>
 </section>
 <section>
-<section id="slide-sec-70">
-<h2 id="sec-70">Training a model</h2>
+<section id="slide-sec-72">
+<h2 id="sec-72">Training a model</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">swimmer-data</span> <span style="color: #696969;">[]</span>
@@ -1124,8 +1149,8 @@ How far we can trust \({ r }\) as an estimate of \({ \rho }\) will depend on two
 </section>
 </section>
 <section>
-<section id="slide-sec-71">
-<h2 id="sec-71">Making a prediction</h2>
+<section id="slide-sec-73">
+<h2 id="sec-73">Making a prediction</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span>predict 1.691 0.0143 185<span style="color: #696969;">)</span>
@@ -1153,25 +1178,26 @@ In 1979, Mark Spitz was 79kg.
 </section>
 </section>
 <section>
-<section id="slide-sec-72">
-<h2 id="sec-72">More data!</h2>
+<section id="slide-sec-74">
+<h2 id="sec-74">More data!</h2>
 <div class="org-src-container">
 
-<pre  class="src src-clojure">  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">features</span> <span style="color: #696969;">[</span>dataset col-names<span style="color: #696969;">]</span>
-    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/$ col-names dataset<span style="color: #696969;">)</span>
-         <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/to-matrix<span style="color: #696969;">)))</span>
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">features</span> <span style="color: #696969;">[</span>dataset col-names<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/$ col-names dataset<span style="color: #696969;">)</span>
+       <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/to-matrix<span style="color: #696969;">)))</span>
 
-  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">gender-dummy</span> <span style="color: #696969;">[</span>gender<span style="color: #696969;">]</span>
-    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">if</span> <span style="color: #696969;">(</span>= gender <span style="color: #CC9393;">"F"</span><span style="color: #696969;">)</span>
-      0.0 1.0<span style="color: #696969;">))</span>
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">gender-dummy</span> <span style="color: #696969;">[</span>gender<span style="color: #696969;">]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">if</span> <span style="color: #696969;">(</span>= gender <span style="color: #CC9393;">"F"</span><span style="color: #696969;">)</span>
+    0.0 1.0<span style="color: #696969;">))</span>
 
-  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-3-26</span> <span style="color: #696969;">[]</span>
-    <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>swimmer-data<span style="color: #696969;">)</span>
-                    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/add-derived-column <span style="color: #CC9393;">"Gender Dummy"</span>
-                                          <span style="color: #696969;">[</span><span style="color: #CC9393;">"Sex"</span><span style="color: #696969;">]</span> gender-dummy<span style="color: #696969;">))</span>
-          x <span style="color: #696969;">(</span>features <span style="color: #696969;">[</span><span style="color: #CC9393;">"Height, cm"</span> <span style="color: #CC9393;">"Age"</span> <span style="color: #CC9393;">"Gender Dummy"</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
-          y <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/log <span style="color: #696969;">(</span>$ <span style="color: #CC9393;">"Weight"</span> data<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
-      <span style="color: #696969;">(</span><span style="color: #7CB8BB;">s</span>/linear-model y x<span style="color: #696969;">)))</span>
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-3-26</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>swimmer-data<span style="color: #696969;">)</span>
+                  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/add-derived-column <span style="color: #CC9393;">"Gender Dummy"</span>
+                                        <span style="color: #696969;">[</span><span style="color: #CC9393;">"Sex"</span><span style="color: #696969;">]</span> gender-dummy<span style="color: #696969;">))</span>
+        x <span style="color: #696969;">(</span>features data <span style="color: #696969;">[</span><span style="color: #CC9393;">"Height, cm"</span> <span style="color: #CC9393;">"Age"</span> <span style="color: #CC9393;">"Gender Dummy"</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+        y <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/log <span style="color: #696969;">(</span>$ <span style="color: #CC9393;">"Weight"</span> data<span style="color: #696969;">))</span>
+        model  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">s</span>/linear-model y x<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:coefs</span> model<span style="color: #696969;">)))</span>
 
 <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; [2.2307529431422637 0.010714697827121089 0.002372188749408574 0.0975412532492026]</span>
 </pre>
@@ -1180,8 +1206,8 @@ In 1979, Mark Spitz was 79kg.
 </section>
 </section>
 <section>
-<section id="slide-sec-73">
-<h2 id="sec-73">Multivariate Linear Regression</h2>
+<section id="slide-sec-75">
+<h2 id="sec-75">Multivariate Linear Regression</h2>
 <p>
 $${y = \theta_0 + \theta_1 x_1 + ... + \theta_n x_n}$$
 </p>
@@ -1189,8 +1215,19 @@ $${y = \theta_0 + \theta_1 x_1 + ... + \theta_n x_n}$$
 </section>
 </section>
 <section>
-<section id="slide-sec-74">
-<h2 id="sec-74">Making predictions</h2>
+<section id="slide-sec-76">
+<h2 id="sec-76">Least Squares</h2>
+
+<div class="figure">
+<p><img src="./images/r2-residuals.png" alt="r2-residuals.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-77">
+<h2 id="sec-77">Making predictions</h2>
 <p>
 $${ y = \theta^T x }$$
 </p>
@@ -1202,7 +1239,15 @@ $${ y = \theta^T x }$$
       <span style="color: #696969;">(</span><span style="color: #7CB8BB;">cl</span>/* x<span style="color: #696969;">)</span>
       <span style="color: #696969;">(</span>first<span style="color: #696969;">)))</span>
 
-<span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/exp <span style="color: #696969;">(</span>predict <span style="color: #696969;">(</span>matrix <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:coefs</span> lm<span style="color: #696969;">))</span> <span style="color: #696969;">(</span>matrix <span style="color: #696969;">[</span>1 185 22 1<span style="color: #696969;">]</span><span style="color: #696969;">))</span>
+<span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-3-27</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>swimmer-data<span style="color: #696969;">)</span>
+                  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/add-derived-column <span style="color: #CC9393;">"Gender Dummy"</span>
+                                        <span style="color: #696969;">[</span><span style="color: #CC9393;">"Sex"</span><span style="color: #696969;">]</span> gender-dummy<span style="color: #696969;">))</span>
+        x <span style="color: #696969;">(</span>features data <span style="color: #696969;">[</span><span style="color: #CC9393;">"Height, cm"</span> <span style="color: #CC9393;">"Age"</span> <span style="color: #CC9393;">"Gender Dummy"</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+        y <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/log <span style="color: #696969;">(</span>$ <span style="color: #CC9393;">"Weight"</span> data<span style="color: #696969;">))</span>
+        model  <span style="color: #696969;">(</span><span style="color: #7CB8BB;">s</span>/linear-model y x<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/exp <span style="color: #696969;">(</span>predict <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/matrix <span style="color: #696969;">(</span><span style="color: #BFEBBF;">:coefs</span> model<span style="color: #696969;">))</span>
+                    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">i</span>/matrix <span style="color: #696969;">[</span>1 185 22 1<span style="color: #696969;">]</span><span style="color: #696969;">)))))</span>
 
 <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; 78.46882772631697</span>
 </pre>
@@ -1211,8 +1256,8 @@ $${ y = \theta^T x }$$
 </section>
 </section>
 <section>
-<section id="slide-sec-75">
-<h2 id="sec-75">How close?</h2>
+<section id="slide-sec-78">
+<h2 id="sec-78">How close?</h2>
 <p>
 The result is around 78.47kg.
 </p>
@@ -1224,18 +1269,33 @@ Compared to 79kg, we were pretty close!
 </section>
 </section>
 <section>
-<section id="slide-sec-76">
-<h2 id="sec-76">Interlude</h2>
+<section id="slide-sec-79">
+<h2 id="sec-79">Summary</h2>
+<ul>
+<li>Distributions</li>
+<li>Statistics</li>
+<li>Visualisation with Quil</li>
+<li>Correlation</li>
+<li>Linear regression</li>
+<li>Multivariate linear regression with Incanter</li>
+
+</ul>
+
 </section>
 </section>
 <section>
-<section id="slide-sec-77">
-<h2 id="sec-77">Classification</h2>
+<section id="slide-sec-80">
+<h2 id="sec-80">Interlude</h2>
 </section>
 </section>
 <section>
-<section id="slide-sec-78">
-<h2 id="sec-78">Question</h2>
+<section id="slide-sec-81">
+<h2 id="sec-81">Classification</h2>
+</section>
+</section>
+<section>
+<section id="slide-sec-82">
+<h2 id="sec-82">Question</h2>
 <p>
 Did all passengers on the Titanic have an equal chance of survival?
 </p>
@@ -1243,21 +1303,17 @@ Did all passengers on the Titanic have an equal chance of survival?
 </section>
 </section>
 <section>
-<section id="slide-sec-79">
-<h2 id="sec-79">Grab the data</h2>
+<section id="slide-sec-83">
+<h2 id="sec-83">On the data</h2>
 <p>
-Data is based on Thomas Cason's Titanic3 dataset. Information on how this was constructed is here.
-</p>
-
-<p>
-<a href="http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/titanic3info.txt">http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/titanic3info.txt</a>
+Data is based on Thomas Cason's Titanic3 dataset.
 </p>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-80">
-<h2 id="sec-80">Inspect the data</h2>
+<section id="slide-sec-84">
+<h2 id="sec-84">Inspect the data</h2>
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -1304,8 +1360,8 @@ Data is based on Thomas Cason's Titanic3 dataset. Information on how this was co
 </section>
 </section>
 <section>
-<section id="slide-sec-81">
-<h2 id="sec-81">Categorical variables</h2>
+<section id="slide-sec-85">
+<h2 id="sec-85">Categorical variables</h2>
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -1341,8 +1397,8 @@ Data is based on Thomas Cason's Titanic3 dataset. Information on how this was co
 </section>
 </section>
 <section>
-<section id="slide-sec-82">
-<h2 id="sec-82">Standard error for a proportion</h2>
+<section id="slide-sec-86">
+<h2 id="sec-86">Standard error for a proportion</h2>
 <p>
 $${SE = \sqrt{ p(1-p) \over n } }$$
 </p>
@@ -1365,8 +1421,8 @@ $${SE =  0.013 }$$
 </section>
 </section>
 <section>
-<section id="slide-sec-83">
-<h2 id="sec-83">How significant?</h2>
+<section id="slide-sec-87">
+<h2 id="sec-87">How significant?</h2>
 <p>
 $${z = { p_1 - p_2 \over  SE }}$$
 </p>
@@ -1394,8 +1450,8 @@ This is essentially impossible.
 </section>
 </section>
 <section>
-<section id="slide-sec-84">
-<h2 id="sec-84">More categories</h2>
+<section id="slide-sec-88">
+<h2 id="sec-88">More categories</h2>
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -1437,8 +1493,8 @@ This is essentially impossible.
 </section>
 </section>
 <section>
-<section id="slide-sec-85">
-<h2 id="sec-85">Our approach doesn't scale</h2>
+<section id="slide-sec-89">
+<h2 id="sec-89">Our approach doesn't scale</h2>
 <p>
 We can use a \({ \chi^2 }\) test.
 </p>
@@ -1464,8 +1520,8 @@ How likely is that this distribution occurred via chance?
 </section>
 </section>
 <section>
-<section id="slide-sec-86">
-<h2 id="sec-86">P-value</h2>
+<section id="slide-sec-90">
+<h2 id="sec-90">P-value</h2>
 <p>
 "The estimated probability of rejecting the null hypothesis \({h_0}\) of a study question when that hypothesis is true."
 </p>
@@ -1473,8 +1529,8 @@ How likely is that this distribution occurred via chance?
 </section>
 </section>
 <section>
-<section id="slide-sec-87">
-<h2 id="sec-87">Probability</h2>
+<section id="slide-sec-91">
+<h2 id="sec-91">Probability</h2>
 
 <div class="figure">
 <p><img src="./images/frequentists_vs_bayesians.jpg" alt="frequentists_vs_bayesians.jpg" />
@@ -1488,8 +1544,8 @@ How likely is that this distribution occurred via chance?
 </section>
 </section>
 <section>
-<section id="slide-sec-88">
-<h2 id="sec-88">Bayes Rule</h2>
+<section id="slide-sec-92">
+<h2 id="sec-92">Bayes Rule</h2>
 <p>
 $${P(A|B) = { P(B|A)P(A) \over P(B) }}$$
 </p>
@@ -1501,8 +1557,8 @@ $${P(A|B) = { P(B|A)P(A) \over P(B) }}$$
 </section>
 </section>
 <section>
-<section id="slide-sec-89">
-<h2 id="sec-89">Bayes titanic</h2>
+<section id="slide-sec-93">
+<h2 id="sec-93">Bayes titanic</h2>
 <p>
 $${ P(survive|female) = { P(female|survive) P(survive) \over P(female) } }$$
 </p>
@@ -1514,14 +1570,14 @@ $${ P(survive|female) = { {339 \over 500 } {500 \over 1309} \over {446 \over 130
 </section>
 </section>
 <section>
-<section id="slide-sec-90">
-<h2 id="sec-90">Bayes classification</h2>
+<section id="slide-sec-94">
+<h2 id="sec-94">Bayes classification</h2>
 <p>
-$${ P(survive |third,male) = { p(survive) p(third|survive) p(male|survive) \over p(third,male)} }$$
+$${ P(survive |third,male) = { P(survive) P(third|survive) P(male|survive) \over P(third,male)} }$$
 </p>
 
 <p>
-$${ P(perish |third,male) = { p(perish) p(third|perish) p(male|perish) \over p(third,male) } }$$
+$${ P(perish |third,male) = { P(perish) P(third|perish) P(male|perish) \over P(third,male) } }$$
 </p>
 
 <p>
@@ -1531,8 +1587,8 @@ Because the evidence is the same for all classes, we can cancel this out.
 </section>
 </section>
 <section>
-<section id="slide-sec-91">
-<h2 id="sec-91">Parse the data</h2>
+<section id="slide-sec-95">
+<h2 id="sec-95">Parse the data</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span>titanic-samples<span style="color: #696969;">)</span>
@@ -1544,8 +1600,8 @@ Because the evidence is the same for all classes, we can cancel this out.
 </section>
 </section>
 <section>
-<section id="slide-sec-92">
-<h2 id="sec-92">Implementing a Naive Bayes model</h2>
+<section id="slide-sec-96">
+<h2 id="sec-96">Implementing a Naive Bayes model</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">safe-inc</span> <span style="color: #696969;">[</span>v<span style="color: #696969;">]</span>
@@ -1564,8 +1620,8 @@ Because the evidence is the same for all classes, we can cancel this out.
 </section>
 </section>
 <section>
-<section id="slide-sec-93">
-<h2 id="sec-93">Implementing a Naive Bayes model</h2>
+<section id="slide-sec-97">
+<h2 id="sec-97">Implementing a Naive Bayes model</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">assoc-row-fn</span> <span style="color: #696969;">[</span>class-attr predictors<span style="color: #696969;">]</span>
@@ -1583,12 +1639,13 @@ Because the evidence is the same for all classes, we can cancel this out.
 </section>
 </section>
 <section>
-<section id="slide-sec-94">
-<h2 id="sec-94">Naive Bayes model</h2>
+<section id="slide-sec-98">
+<h2 id="sec-98">Naive Bayes model</h2>
 <div class="org-src-container">
 
-<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span>titanic-samples<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
-    <span style="color: #696969;">(</span>pprint <span style="color: #696969;">(</span>naive-bayes data <span style="color: #BFEBBF;">:survived</span> <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:gender</span> <span style="color: #BFEBBF;">:class</span><span style="color: #696969;">]</span><span style="color: #696969;">)))</span>
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-5-6</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span>titanic-samples<span style="color: #696969;">)</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span>pprint <span style="color: #696969;">(</span>naive-bayes data <span style="color: #BFEBBF;">:survived</span> <span style="color: #696969;">[</span><span style="color: #BFEBBF;">:gender</span> <span style="color: #BFEBBF;">:class</span><span style="color: #696969;">]</span><span style="color: #696969;">))))</span>
 </pre>
 </div>
 
@@ -1598,22 +1655,22 @@ Because the evidence is the same for all classes, we can cancel this out.
 
 <div class="org-src-container">
 
-<pre  class="src src-clojure"><span style="color: #696969;">{</span><span style="color: #BFEBBF;">false</span>
- <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:class</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:third</span> 528, <span style="color: #BFEBBF;">:second</span> 158, <span style="color: #BFEBBF;">:first</span> 123<span style="color: #696969;">}</span>,
-  <span style="color: #BFEBBF;">:gender</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:male</span> 682, <span style="color: #BFEBBF;">:female</span> 127<span style="color: #696969;">}</span>,
-  <span style="color: #BFEBBF;">:total</span> 809<span style="color: #696969;">}</span>,
- <span style="color: #BFEBBF;">true</span>
- <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:class</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:third</span> 181, <span style="color: #BFEBBF;">:second</span> 119, <span style="color: #BFEBBF;">:first</span> 198<span style="color: #696969;">}</span>,
-  <span style="color: #BFEBBF;">:gender</span> <span style="color: #696969;">{</span><span style="color: #BFEBBF;">:male</span> 161, <span style="color: #BFEBBF;">:female</span> 337<span style="color: #696969;">}</span>,
-  <span style="color: #BFEBBF;">:total</span> 498<span style="color: #696969;">}}</span>
+<pre  class="src src-clojure"><span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">{false</span>
+<span style="color: #5F7F5F;">;;  </span><span style="color: #7F9F7F;">{:class {:third 528, :second 158, :first 123},</span>
+<span style="color: #5F7F5F;">;;   </span><span style="color: #7F9F7F;">:gender {:male 682, :female 127},</span>
+<span style="color: #5F7F5F;">;;   </span><span style="color: #7F9F7F;">:total 809},</span>
+<span style="color: #5F7F5F;">;;  </span><span style="color: #7F9F7F;">true</span>
+<span style="color: #5F7F5F;">;;  </span><span style="color: #7F9F7F;">{:class {:third 181, :second 119, :first 198},</span>
+<span style="color: #5F7F5F;">;;   </span><span style="color: #7F9F7F;">:gender {:male 161, :female 337},</span>
+<span style="color: #5F7F5F;">;;   </span><span style="color: #7F9F7F;">:total 498}}</span>
 </pre>
 </div>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-95">
-<h2 id="sec-95">Making predictions</h2>
+<section id="slide-sec-99">
+<h2 id="sec-99">Making predictions</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">n</span> <span style="color: #696969;">[</span>model<span style="color: #696969;">]</span>
@@ -1635,15 +1692,15 @@ Because the evidence is the same for all classes, we can cancel this out.
                      <span style="color: #696969;">[</span>class <span style="color: #696969;">(</span>conditional-probability model test class<span style="color: #696969;">)</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
                    <span style="color: #696969;">(</span>keys model<span style="color: #696969;">))</span><span style="color: #696969;">]</span>
     <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #696969;">(</span>sort-by second &gt; probs<span style="color: #696969;">)</span>
-        ffirst<span style="color: #696969;">)))</span>
+        <span style="color: #696969;">(</span>ffirst<span style="color: #696969;">))))</span>
 </pre>
 </div>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-96">
-<h2 id="sec-96">Does it work?</h2>
+<section id="slide-sec-100">
+<h2 id="sec-100">Does it work?</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-5-7</span> <span style="color: #696969;">[]</span>
@@ -1665,8 +1722,8 @@ Because the evidence is the same for all classes, we can cancel this out.
 </section>
 </section>
 <section>
-<section id="slide-sec-97">
-<h2 id="sec-97">Why Naive?</h2>
+<section id="slide-sec-101">
+<h2 id="sec-101">Why Naive?</h2>
 <p>
 Because it assumes all variables are independent. We know they are not (e.g. being male <i>and</i> in third class) but naive bayes weights all attributes equally.
 </p>
@@ -1678,14 +1735,14 @@ In practice it works surprisingly well, particularly where there are large numbe
 </section>
 </section>
 <section>
-<section id="slide-sec-98">
-<h2 id="sec-98">Logistic Regression</h2>
+<section id="slide-sec-102">
+<h2 id="sec-102">Logistic Regression</h2>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-99">
-<h2 id="sec-99">Logistic regression</h2>
+<section id="slide-sec-103">
+<h2 id="sec-103">Logistic regression</h2>
 <p>
 Logistic regression uses similar techniques to linear regression but guarantees an output only between 0 and 1.
 </p>
@@ -1709,8 +1766,8 @@ $${ g(z) = { 1 \over  1 + e^{-z}} }$$
 </section>
 </section>
 <section>
-<section id="slide-sec-100">
-<h2 id="sec-100">The logistic function</h2>
+<section id="slide-sec-104">
+<h2 id="sec-104">The logistic function</h2>
 
 <div class="figure">
 <p><img src="./images/logistic-function.png" alt="logistic-function.png" />
@@ -1720,8 +1777,8 @@ $${ g(z) = { 1 \over  1 + e^{-z}} }$$
 </section>
 </section>
 <section>
-<section id="slide-sec-101">
-<h2 id="sec-101">The logistic function</h2>
+<section id="slide-sec-105">
+<h2 id="sec-105">The logistic function</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">logistic-function</span> <span style="color: #696969;">[</span>theta<span style="color: #696969;">]</span>
@@ -1735,8 +1792,8 @@ $${ g(z) = { 1 \over  1 + e^{-z}} }$$
 </section>
 </section>
 <section>
-<section id="slide-sec-102">
-<h2 id="sec-102">Interpretation</h2>
+<section id="slide-sec-106">
+<h2 id="sec-106">Interpretation</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>f <span style="color: #696969;">(</span>logistic-function <span style="color: #696969;">[</span>0<span style="color: #696969;">]</span><span style="color: #696969;">)</span><span style="color: #696969;">]</span>
@@ -1768,8 +1825,8 @@ $${ g(z) = { 1 \over  1 + e^{-z}} }$$
 </section>
 </section>
 <section>
-<section id="slide-sec-103">
-<h2 id="sec-103">Cost function</h2>
+<section id="slide-sec-107">
+<h2 id="sec-107">Cost function</h2>
 <p>
 Cost varies between 0 and (a big number).
 </p>
@@ -1789,8 +1846,8 @@ Cost varies between 0 and (a big number).
 </section>
 </section>
 <section>
-<section id="slide-sec-104">
-<h2 id="sec-104">Converting Titanic data to features</h2>
+<section id="slide-sec-108">
+<h2 id="sec-108">Converting Titanic data to features</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">titanic-features</span> <span style="color: #696969;">[]</span>
@@ -1811,8 +1868,8 @@ Cost varies between 0 and (a big number).
 </section>
 </section>
 <section>
-<section id="slide-sec-105">
-<h2 id="sec-105">Calculating the gradient</h2>
+<section id="slide-sec-109">
+<h2 id="sec-109">Calculating the gradient</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">gradient-fn</span> <span style="color: #696969;">[</span>h-theta xs ys<span style="color: #696969;">]</span>
@@ -1831,8 +1888,8 @@ We transpose to calculate the average for each feature across all xs rather than
 </section>
 </section>
 <section>
-<section id="slide-sec-106">
-<h2 id="sec-106">Gradient descent</h2>
+<section id="slide-sec-110">
+<h2 id="sec-110">Gradient descent</h2>
 <p>
 The cost function will be lowest when the parameters are at their optimum.
 </p>
@@ -1846,31 +1903,26 @@ The cost function will be lowest when the parameters are at their optimum.
 </section>
 </section>
 <section>
-<section id="slide-sec-107">
-<h2 id="sec-107">Apache Commons Math</h2>
+<section id="slide-sec-111">
+<h2 id="sec-111">Apache Commons Math</h2>
 <p>
 Provides heavy-lifting for running tasks like gradient descent.
 </p>
 
-<p>
-Java :(
-</p>
-
 <div class="org-src-container">
 
-<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #BFEBBF;">:import</span> <span style="color: #696969;">[</span><span style="color: #7CB8BB;">clojure.lang</span> <span style="color: #7CB8BB;">IFn</span><span style="color: #696969;">]</span>
-           <span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.commons.math3.analysis</span> <span style="color: #7CB8BB;">MultivariateFunction</span> <span style="color: #7CB8BB;">MultivariateVectorFunction</span> <span style="color: #7CB8BB;">ParametricUnivariateFunction</span><span style="color: #696969;">]</span>
-           <span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.commons.math3.optim</span> <span style="color: #7CB8BB;">InitialGuess</span> <span style="color: #7CB8BB;">MaxEval</span> <span style="color: #7CB8BB;">SimpleBounds</span> <span style="color: #7CB8BB;">OptimizationData</span> <span style="color: #7CB8BB;">SimpleValueChecker</span> <span style="color: #7CB8BB;">PointValuePair</span><span style="color: #696969;">]</span>
-           <span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.commons.math3.optim.nonlinear.scalar</span> <span style="color: #7CB8BB;">ObjectiveFunction</span> <span style="color: #7CB8BB;">ObjectiveFunctionGradient</span> <span style="color: #7CB8BB;">GoalType</span> <span style="color: #7CB8BB;">MultivariateOptimizer</span><span style="color: #696969;">]</span>
-           <span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.commons.math3.optim.nonlinear.scalar.gradient</span> <span style="color: #7CB8BB;">NonLinearConjugateGradientOptimizer</span> <span style="color: #7CB8BB;">NonLinearConjugateGradientOptimizer$Formula</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #BFEBBF;">:import</span> <span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.commons.math3.analysis</span> <span style="color: #7CB8BB;">MultivariateFunction</span> <span style="color: #7CB8BB;">MultivariateVectorFunction</span><span style="color: #696969;">]</span>
+         <span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.commons.math3.optim</span> <span style="color: #7CB8BB;">InitialGuess</span> <span style="color: #7CB8BB;">MaxEval</span> <span style="color: #7CB8BB;">SimpleBounds</span> <span style="color: #7CB8BB;">OptimizationData</span> <span style="color: #7CB8BB;">SimpleValueChecker</span> <span style="color: #7CB8BB;">PointValuePair</span><span style="color: #696969;">]</span>
+         <span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.commons.math3.optim.nonlinear.scalar</span> <span style="color: #7CB8BB;">ObjectiveFunction</span> <span style="color: #7CB8BB;">ObjectiveFunctionGradient</span> <span style="color: #7CB8BB;">GoalType</span><span style="color: #696969;">]</span>
+         <span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.commons.math3.optim.nonlinear.scalar.gradient</span> <span style="color: #7CB8BB;">NonLinearConjugateGradientOptimizer</span> <span style="color: #7CB8BB;">NonLinearConjugateGradientOptimizer$Formula</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
 </pre>
 </div>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-108">
-<h2 id="sec-108">Clojure's Java interop</h2>
+<section id="slide-sec-112">
+<h2 id="sec-112">Clojure's Java interop</h2>
 <p>
 An object wrapper to represent a function: too many levels of indirection?!
 </p>
@@ -1893,8 +1945,8 @@ An object wrapper to represent a function: too many levels of indirection?!
 </section>
 </section>
 <section>
-<section id="slide-sec-109">
-<h2 id="sec-109">Gradient Descent</h2>
+<section id="slide-sec-113">
+<h2 id="sec-113">Gradient Descent</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">make-ncg-optimizer</span> <span style="color: #696969;">[]</span>
@@ -1925,8 +1977,8 @@ An object wrapper to represent a function: too many levels of indirection?!
 </section>
 </section>
 <section>
-<section id="slide-sec-110">
-<h2 id="sec-110">Running Gradient Descent</h2>
+<section id="slide-sec-114">
+<h2 id="sec-114">Running Gradient Descent</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">run-logistic-regression</span> <span style="color: #696969;">[</span>data initial-guess<span style="color: #696969;">]</span>
@@ -1948,8 +2000,8 @@ An object wrapper to represent a function: too many levels of indirection?!
 </section>
 </section>
 <section>
-<section id="slide-sec-111">
-<h2 id="sec-111">Producing a model</h2>
+<section id="slide-sec-115">
+<h2 id="sec-115">Producing a model</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-5-11</span> <span style="color: #696969;">[]</span>
@@ -1962,20 +2014,18 @@ An object wrapper to represent a function: too many levels of indirection?!
 </section>
 </section>
 <section>
-<section id="slide-sec-112">
-<h2 id="sec-112">Making predictions</h2>
+<section id="slide-sec-116">
+<h2 id="sec-116">Making predictions</h2>
 <div class="org-src-container">
 
-<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #DFAF8F;">logistic-theta</span>
-  <span style="color: #696969;">[</span>0.9884451497898937 -0.9582211820237765 -0.2942204909975665
-   -0.008340184840488646 -0.03219717794854576 2.6351942087729614
-   0.5946571788582461 1.2192345883060776 0.6481382214058901<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #DFAF8F;">theta</span>
+  <span style="color: #696969;">[</span>0.690807824623404 -0.9033828001369435 -0.3114375278698766 -0.01894319673287219 -0.03100315579768661 2.5894858366033273 0.7939190708193374 1.3711334887947388 0.6672555257828919<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
 
 <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">round</span> <span style="color: #696969;">[</span>x<span style="color: #696969;">]</span>
   <span style="color: #696969;">(</span><span style="color: #7CB8BB;">Math</span>/round x<span style="color: #696969;">))</span>
 
 <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #DFAF8F;">logistic-model</span>
-  <span style="color: #696969;">(</span>logistic-function logistic-theta<span style="color: #696969;">))</span>
+  <span style="color: #696969;">(</span>logistic-function theta<span style="color: #696969;">))</span>
 
 <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-5-13</span> <span style="color: #696969;">[]</span>
   <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>data <span style="color: #696969;">(</span>titanic-features<span style="color: #696969;">)</span>
@@ -1986,15 +2036,15 @@ An object wrapper to represent a function: too many levels of indirection?!
     <span style="color: #696969;">(</span>/ <span style="color: #696969;">(</span>get results <span style="color: #BFEBBF;">true</span><span style="color: #696969;">)</span>
        <span style="color: #696969;">(</span>apply + <span style="color: #696969;">(</span>vals results<span style="color: #696969;">)))))</span>
 
-<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; 1028/1309</span>
+<span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; 1030/1309</span>
 </pre>
 </div>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-113">
-<h2 id="sec-113">Evaluating the classifier</h2>
+<section id="slide-sec-117">
+<h2 id="sec-117">Evaluating the classifier</h2>
 <p>
 <b>Cross-validation</b>: we want to separate our test and training data sets
 </p>
@@ -2006,14 +2056,14 @@ An object wrapper to represent a function: too many levels of indirection?!
 </section>
 </section>
 <section>
-<section id="slide-sec-114">
-<h2 id="sec-114">Clustering</h2>
+<section id="slide-sec-118">
+<h2 id="sec-118">Clustering</h2>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-115">
-<h2 id="sec-115">Clustering</h2>
+<section id="slide-sec-119">
+<h2 id="sec-119">Clustering</h2>
 <p>
 Find a grouping of a set of objects such that objects in the same group are more similar to each other than those in other groups.
 </p>
@@ -2021,8 +2071,8 @@ Find a grouping of a set of objects such that objects in the same group are more
 </section>
 </section>
 <section>
-<section id="slide-sec-116">
-<h2 id="sec-116">Similarity measures</h2>
+<section id="slide-sec-120">
+<h2 id="sec-120">Similarity measures</h2>
 <p>
 Many to choose from: Jaccard, Euclidean.
 </p>
@@ -2040,8 +2090,8 @@ For text documents the <b>Cosine</b> measure is often chosen.
 </section>
 </section>
 <section>
-<section id="slide-sec-117">
-<h2 id="sec-117">Cosine similarity</h2>
+<section id="slide-sec-121">
+<h2 id="sec-121">Cosine similarity</h2>
 <p>
 $${ cos( \theta ) = { A \cdot B \over \| A \| \| B \| } }$$
 </p>
@@ -2063,8 +2113,8 @@ $${ cos( \theta ) = { A \cdot B \over \| A \| \| B \| } }$$
 </section>
 </section>
 <section>
-<section id="slide-sec-118">
-<h2 id="sec-118">Creating sparse vectors</h2>
+<section id="slide-sec-122">
+<h2 id="sec-122">Creating sparse vectors</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #DFAF8F;">dictionary</span>
@@ -2091,11 +2141,11 @@ $${ cos( \theta ) = { A \cdot B \over \| A \| \| B \| } }$$
 </section>
 </section>
 <section>
-<section id="slide-sec-119">
-<h2 id="sec-119">Example</h2>
+<section id="slide-sec-123">
+<h2 id="sec-123">Example</h2>
 <div class="org-src-container">
 
-<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>split <span style="color: #CC9393;">"the quick brown fox jumps over the lazy dog"</span> #<span style="color: #CC9393;">"\W"</span><span style="color: #696969;">)</span>
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #696969;">(</span>split <span style="color: #CC9393;">"the quick brown fox jumps over the lazy dog"</span> #<span style="color: #CC9393;">"\W+"</span><span style="color: #696969;">)</span>
      <span style="color: #696969;">(</span>document-vector dictionary<span style="color: #696969;">))</span>
 
 <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">=&gt; {7 1, 6 1, 5 1, 4 1, 3 1, 2 1, 1 1, 0 2}</span>
@@ -2109,8 +2159,8 @@ $${ cos( \theta ) = { A \cdot B \over \| A \| \| B \| } }$$
 </section>
 </section>
 <section>
-<section id="slide-sec-120">
-<h2 id="sec-120">Stemming / Stopwords</h2>
+<section id="slide-sec-124">
+<h2 id="sec-124">Stemming / Stopwords</h2>
 <p>
 <a href="http://clojars.org/stemmers">http://clojars.org/stemmers</a>
 </p>
@@ -2126,8 +2176,8 @@ $${ cos( \theta ) = { A \cdot B \over \| A \| \| B \| } }$$
 </section>
 </section>
 <section>
-<section id="slide-sec-121">
-<h2 id="sec-121">Why?</h2>
+<section id="slide-sec-125">
+<h2 id="sec-125">Why?</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure">  <span style="color: #696969;">(</span>cosine-sparse
@@ -2159,8 +2209,8 @@ $${ cos( \theta ) = { A \cdot B \over \| A \| \| B \| } }$$
 </section>
 </section>
 <section>
-<section id="slide-sec-122">
-<h2 id="sec-122">Example</h2>
+<section id="slide-sec-126">
+<h2 id="sec-126">Example</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span> <span style="color: #CC9393;">"it's lovely that you're musical"</span>
@@ -2178,8 +2228,8 @@ $${ cos( \theta ) = { A \cdot B \over \| A \| \| B \| } }$$
 </section>
 </section>
 <section>
-<section id="slide-sec-123">
-<h2 id="sec-123">Mahout</h2>
+<section id="slide-sec-127">
+<h2 id="sec-127">Mahout</h2>
 <p>
 <a href="http://mahout.apache.org/">http://mahout.apache.org/</a>
 </p>
@@ -2191,8 +2241,8 @@ $${ cos( \theta ) = { A \cdot B \over \| A \| \| B \| } }$$
 </section>
 </section>
 <section>
-<section id="slide-sec-124">
-<h2 id="sec-124">Get the data</h2>
+<section id="slide-sec-128">
+<h2 id="sec-128">Get the data</h2>
 <p>
 We're going to be clustering the Reuters dataset.
 </p>
@@ -2200,6 +2250,12 @@ We're going to be clustering the Reuters dataset.
 <p>
 Follow the readme instructions:
 </p>
+
+<div class="org-src-container">
+
+<pre  class="src src-bash">brew install mahout
+</pre>
+</div>
 
 <div class="org-src-container">
 
@@ -2212,8 +2268,8 @@ mahout seqdirectory -i data/reuters-txt -o data/reuters-sequencefile
 </section>
 </section>
 <section>
-<section id="slide-sec-125">
-<h2 id="sec-125">Vector representation</h2>
+<section id="slide-sec-129">
+<h2 id="sec-129">Vector representation</h2>
 <p>
 Each document is converted into a vector representation.
 </p>
@@ -2225,8 +2281,8 @@ All vectors share a dictionary providing a unique index for each word.
 </section>
 </section>
 <section>
-<section id="slide-sec-126">
-<h2 id="sec-126">Sequencefiles</h2>
+<section id="slide-sec-130">
+<h2 id="sec-130">Sequencefiles</h2>
 <p>
 Input:
 </p>
@@ -2257,8 +2313,8 @@ Output (Dictionary):
 </section>
 </section>
 <section>
-<section id="slide-sec-127">
-<h2 id="sec-127">Parkour</h2>
+<section id="slide-sec-131">
+<h2 id="sec-131">Parkour</h2>
 <p>
 Parkour is a Clojure library for interacting with Hadoop.
 </p>
@@ -2270,8 +2326,8 @@ It provides a thinner layer of abstraction than PigPen and Cascalog.
 </section>
 </section>
 <section>
-<section id="slide-sec-128">
-<h2 id="sec-128">TF-IDF</h2>
+<section id="slide-sec-132">
+<h2 id="sec-132">TF-IDF</h2>
 <p>
 Term frequency, inverse document frenquency.
 </p>
@@ -2283,17 +2339,17 @@ $${tfidf(t, d, D) = tf(t, d) \cdot idf(t, D) }$$
 </section>
 </section>
 <section>
-<section id="slide-sec-129">
-<h2 id="sec-129">We need a unique index for each word</h2>
+<section id="slide-sec-133">
+<h2 id="sec-133">We need a unique ID</h2>
 <p>
-We need a way of computing a unique index in parallel
+And we need to compute it in parallel.
 </p>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-130">
-<h2 id="sec-130">Parkour Mapping</h2>
+<section id="slide-sec-134">
+<h2 id="sec-134">Parkour Mapping</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span>require '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">clojure.core.reducers</span> <span style="color: #BFEBBF;">:as</span> r<span style="color: #696969;">]</span>
@@ -2312,16 +2368,11 @@ We need a way of computing a unique index in parallel
 </pre>
 </div>
 
-<p>
-Parkour uses Clojure's reducers.
-Can supply metadata informing Parkour how we'd like to receive our data.
-</p>
-
 </section>
 </section>
 <section>
-<section id="slide-sec-131">
-<h2 id="sec-131">Shape metadata</h2>
+<section id="slide-sec-135">
+<h2 id="sec-135">Shape metadata</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #BFEBBF;">:keyvals</span> <span style="color: #5F7F5F;">;; </span><span style="color: #7F9F7F;">Re-shape as vectors of key-vals pairs.</span>
@@ -2333,8 +2384,8 @@ Can supply metadata informing Parkour how we'd like to receive our data.
 </section>
 </section>
 <section>
-<section id="slide-sec-132">
-<h2 id="sec-132">Just normal functions</h2>
+<section id="slide-sec-136">
+<h2 id="sec-136">Plain old functions</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure">  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span>  <span style="color: #696969;">(</span>document-count-m <span style="color: #696969;">[</span><span style="color: #CC9393;">"it's lovely that you're musical"</span>
@@ -2349,8 +2400,8 @@ Can supply metadata informing Parkour how we'd like to receive our data.
 </section>
 </section>
 <section>
-<section id="slide-sec-133">
-<h2 id="sec-133">And reducing&#x2026;</h2>
+<section id="slide-sec-137">
+<h2 id="sec-137">And reducing&#x2026;</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span>require '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">parkour.io.dux</span> <span style="color: #BFEBBF;">:as</span> dux<span style="color: #696969;">]</span>
@@ -2370,15 +2421,11 @@ Can supply metadata informing Parkour how we'd like to receive our data.
 </pre>
 </div>
 
-<p>
-We have access to the MapReduce context, can get the partition number
-</p>
-
 </section>
 </section>
 <section>
-<section id="slide-sec-134">
-<h2 id="sec-134">Creating a job</h2>
+<section id="slide-sec-138">
+<h2 id="sec-138">Creating a job</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span>require '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">parkour.graph</span> <span style="color: #BFEBBF;">:as</span> pg<span style="color: #696969;">]</span>
@@ -2401,8 +2448,8 @@ We have access to the MapReduce context, can get the partition number
 </section>
 </section>
 <section>
-<section id="slide-sec-135">
-<h2 id="sec-135">Writing to Distributed Cache</h2>
+<section id="slide-sec-139">
+<h2 id="sec-139">Writing to Distributed Cache</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span>require '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">parkour.io.dval</span> <span style="color: #BFEBBF;">:as</span> dval<span style="color: #696969;">]</span><span style="color: #696969;">)</span>
@@ -2429,8 +2476,8 @@ We have access to the MapReduce context, can get the partition number
 </section>
 </section>
 <section>
-<section id="slide-sec-136">
-<h2 id="sec-136">Reading from distributed cache</h2>
+<section id="slide-sec-140">
+<h2 id="sec-140">Reading from distributed cache</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">global-id</span>
@@ -2463,8 +2510,8 @@ We have access to the MapReduce context, can get the partition number
 </section>
 </section>
 <section>
-<section id="slide-sec-137">
-<h2 id="sec-137">Creating text vectors</h2>
+<section id="slide-sec-141">
+<h2 id="sec-141">Creating text vectors</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">import</span> '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.mahout.math</span> <span style="color: #7CB8BB;">RandomAccessSparseVector</span><span style="color: #696969;">]</span><span style="color: #696969;">)</span>
@@ -2485,8 +2532,8 @@ We have access to the MapReduce context, can get the partition number
 </section>
 </section>
 <section>
-<section id="slide-sec-138">
-<h2 id="sec-138">The finished job</h2>
+<section id="slide-sec-142">
+<h2 id="sec-142">The finished job</h2>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">import</span> '<span style="color: #696969;">[</span><span style="color: #7CB8BB;">org.apache.hadoop.io</span> <span style="color: #7CB8BB;">Text</span><span style="color: #696969;">]</span>
@@ -2516,13 +2563,28 @@ We have access to the MapReduce context, can get the partition number
 </section>
 </section>
 <section>
-<section id="slide-sec-139">
-<h2 id="sec-139">K-Means</h2>
+<section id="slide-sec-143">
+<h2 id="sec-143">Run the job</h2>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"><span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #93E0E3;">ex-6-14</span> <span style="color: #696969;">[]</span>
+  <span style="color: #696969;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> <span style="color: #696969;">[</span>input <span style="color: #CC9393;">"data/reuters-sequencefile"</span>
+        output <span style="color: #CC9393;">"data/parkour-vectors"</span><span style="color: #696969;">]</span>
+    <span style="color: #696969;">(</span><span style="color: #7CB8BB;">tool</span>/run <span style="color: #7CB8BB;">vectorizer</span>/tool <span style="color: #696969;">[</span>input output<span style="color: #696969;">]</span><span style="color: #696969;">)))</span>
+</pre>
+</div>
+
 </section>
 </section>
 <section>
-<section id="slide-sec-140">
-<h2 id="sec-140">K-Means</h2>
+<section id="slide-sec-144">
+<h2 id="sec-144">K-Means</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-sec-145">
+<h2 id="sec-145">K-Means</h2>
 
 <div class="figure">
 <p><img src="./images/kmeans.png" alt="kmeans.png" />
@@ -2532,8 +2594,8 @@ We have access to the MapReduce context, can get the partition number
 </section>
 </section>
 <section>
-<section id="slide-sec-141">
-<h2 id="sec-141">Running clustering</h2>
+<section id="slide-sec-146">
+<h2 id="sec-146">Running clustering</h2>
 <p>
 script/run-kmeans.sh
 </p>
@@ -2566,8 +2628,8 @@ mahout clusterdump \
 </section>
 </section>
 <section>
-<section id="slide-sec-142">
-<h2 id="sec-142">How many clusters?</h2>
+<section id="slide-sec-147">
+<h2 id="sec-147">How many clusters?</h2>
 
 <div class="figure">
 <p><img src="./images/cluster-ambiguity.png" alt="cluster-ambiguity.png" />
@@ -2577,29 +2639,31 @@ mahout clusterdump \
 </section>
 </section>
 <section>
-<section id="slide-sec-143">
-<h2 id="sec-143">What did I leave out?</h2>
+<section id="slide-sec-148">
+<h2 id="sec-148">What did I leave out?</h2>
 <ul>
-<li>Spectral and LDA clustering</li>
 <li>Cluster quality measures</li>
+<li>Spectral and LDA clustering</li>
 <li>Collaborative filtering with Mahout</li>
+<li>Random forests</li>
 <li>Spark for movie recommendations with Sparkling</li>
 <li>Graph data with Loom and Datomic</li>
 <li>MapReduce with Cascalog and PigPen</li>
 <li>Adapting algorithms for massive scale</li>
 <li>Time series and forecasting</li>
-<li>Dimensionality reduction</li>
+<li>Dimensionality reduction, feature selection</li>
 <li>More visualisation techniques</li>
+<li>Lots more&#x2026;</li>
 
 </ul>
 
 </section>
 </section>
 <section>
-<section id="slide-sec-144">
-<h2 id="sec-144">Book</h2>
+<section id="slide-sec-149">
+<h2 id="sec-149">Book</h2>
 <p>
-Clojure for Data Science will be available in the second half of the year from <a href="http://packtpub.com">http://packtpub.com</a>.
+<b>Clojure for Data Science</b> will be available in the second half of the year from <a href="http://packtpub.com">http://packtpub.com</a>.
 </p>
 
 <p>
@@ -2609,8 +2673,8 @@ Clojure for Data Science will be available in the second half of the year from <
 </section>
 </section>
 <section>
-<section id="slide-sec-145">
-<h2 id="sec-145">Slides</h2>
+<section id="slide-sec-150">
+<h2 id="sec-150">Slides</h2>
 <p>
 <a href="http://github.com/henrygarner/clojure-data-science">http://github.com/henrygarner/clojure-data-science</a>
 </p>
@@ -2618,8 +2682,8 @@ Clojure for Data Science will be available in the second half of the year from <
 </section>
 </section>
 <section>
-<section id="slide-sec-146">
-<h2 id="sec-146">Thank you!</h2>
+<section id="slide-sec-151">
+<h2 id="sec-151">Thank you!</h2>
 <p>
 Henry Garner
 </p>

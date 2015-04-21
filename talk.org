@@ -3,13 +3,14 @@
 #+Email:
 
 #+REVEAL_EXTRA_CSS: ./reveal.js/lib/css/zenburn.css
+#+REVEAL_MATHJAX_URL: MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML
 #+REVEAL_THEME: solarized
 #+OPTIONS: num:nil toc:nil reveal_mathjax:t reveal_history:t reveal_control:nil reveal_progress:nil
 #+REVEAL_TRANS: fade
 
-* Why me?
+* Why am I giving this talk?
 
-I am in the final stages of producing a book "Clojure for Data Science".
+I am in the final stages of writing *Clojure for Data Science*.
 
 It will be published via http://packtpub.com later this year.
 
@@ -21,15 +22,7 @@ I am a software engineer, not a statistician.
 
 * Data Science Venn
 
-"Once you have acquired and cleaned the data, the next step is to actually extract insight from it. In order to do this, you need to apply appropriate math and statistics methods, which requires at least a baseline familiarity with these tools. This is not to say that a PhD in statistics in required to be a competent data scientist, but it does require knowing what an ordinary least squares regression is and how to interpret it"
-
--Drew Conway
-
-* Data Science Venn
-
 [[./images/data_science_venn.png]]
-
-Drew Conway
 
 * Why is data science important?
 
@@ -41,22 +34,24 @@ These trends influence the kinds of systems we are all expected to build.
  
 * Why Clojure?
 
-Clojure lends itself to interactive exploration.
+Clojure lends itself to interactive exploration and learning.
 
-It's fantastic for manipulating data.
+It has fantastic data manipulating abstractions.
 
-The JVM provides hosts many of the workhorse data processing frameworks.
+The JVM hosts many of the workhorse data storage and processing frameworks.
 
-* What I will talk about
+* What I will cover
   * Distributions
   * Statistics
-  * Correlation
   * Visualisation with Quil
+  * Correlation
   * Linear regression
   * Multivariate linear regression with Incanter
+  * *Break*
+  * Categorical data
   * Bayes classification
   * Logistic regression with Apache Commons Math
-  * Clustering with Parkour
+  * Clustering with Parkour and Apache Mahout
 
 * Follow along
 
@@ -70,7 +65,7 @@ The book's GitHub is available at http://github.com/clojuredatascience
 
 * Part 1: Spotting election fraud
 
-* Loading data
+* Loading UK Election data
 
 Using incanter's excel namespace
 
@@ -91,12 +86,24 @@ Using incanter's excel namespace
 (i/view (uk-data))
 #+END_SRC
 
+* If you're following along
+
+#+BEGIN_SRC bash
+
+git clone git@github.com:clojuredatascience/ch1-introduction.git
+
+cd ch1-introduction
+
+script/download-data.sh
+
+lein run -e 1.1
+#+END_SRC
+
 * Column names
 
 #+BEGIN_SRC clojure
-(i/view (uk-data))
-
-(i/col-names (uk-data))
+(defn ex-1-1 []
+  (i/col-names (uk-data)))
 
 ;; => ["Press Association Reference" "Constituency Name" "Region" "Election Year" "Electorate" "Votes" "AC" "AD" "AGS" "APNI" "APP" "AWL" "AWP" "BB" "BCP" "Bean" "Best" "BGPV" "BIB" "BIC" "Blue" "BNP" "BP Elvis" "C28" "Cam Soc" "CG" "Ch M" "Ch P" "CIP" "CITY" "CNPG" "Comm" "Comm L" "Con" "Cor D" "CPA" "CSP" "CTDP" "CURE" "D Lab" "D Nat" "DDP" "DUP" "ED" "EIP" "EPA" "FAWG" "FDP" "FFR" "Grn" "GSOT" "Hum" "ICHC" "IEAC" "IFED" "ILEU" "Impact" "Ind1" "Ind2" "Ind3" "Ind4" "Ind5" "IPT" "ISGB" "ISQM" "IUK" "IVH" "IZB" "JAC" "Joy" "JP" "Lab" "Land" "LD" "Lib" "Libert" "LIND" "LLPB" "LTT" "MACI" "MCP" "MEDI" "MEP" "MIF" "MK" "MPEA" "MRLP" "MRP" "Nat Lib" "NCDV" "ND" "New" "NF" "NFP" "NICF" "Nobody" "NSPS" "PBP" "PC" "Pirate" "PNDP" "Poet" "PPBF" "PPE" "PPNV" "Reform" "Respect" "Rest" "RRG" "RTBP" "SACL" "Sci" "SDLP" "SEP" "SF" "SIG" "SJP" "SKGP" "SMA" "SMRA" "SNP" "Soc" "Soc Alt" "Soc Dem" "Soc Lab" "South" "Speaker" "SSP" "TF" "TOC" "Trust" "TUSC" "TUV" "UCUNF" "UKIP" "UPS" "UV" "VCCA" "Vote" "Wessex Reg" "WRP" "You" "Youth" "YRDPL"]
 #+END_SRC
@@ -136,20 +143,18 @@ ${ ( x_i - \mu_x )^2 }$ is a function of x and the mean of x
 #+BEGIN_SRC clojure
 (require '[incanter.charts :as c])
 
-(-> (uk-electorate)
-    (c/histogram :nbins 20)
-    (i/view))
+(defn ex-1-11 []
+  (-> (uk-electorate)
+      (c/histogram :nbins 20)
+      (i/view)))
 #+END_SRC
 
 [[./images/histogram.png]]
-
 
 * Distibutions as models
 http://imgur.com/4nnbyru
 
 [[./images/matura.jpg]]
-
-
 
 * Poincaré's Bread
 
@@ -157,7 +162,7 @@ Poincaré weighed his bread every day for a year.
 
 He discovered that the weights of the bread followed a normal distribution, but that the peak was at 950g, whereas loaves of bread were supposed to be regulated at 1kg. He reported his baker to the authorities.
 
-The next year Poincaré continued to weigh his bread from the same baker, who was now wary of giving him the lighter loaves. After a year the mean loaf weight was 1kg, but this time the distribution was skewed to the left. This is consistent with the baker giving Poincaré only the heaviest of his loaves. The baker was reported to the authorities again
+The next year Poincaré continued to weigh his bread from the same baker, who was now wary of giving him the lighter loaves. After a year the mean loaf weight was 1kg, but this time the distribution had a positive skew. This is consistent with the baker giving Poincaré only the heaviest of his loaves. The baker was reported to the authorities again
 
 * Honest Baker
 
@@ -195,7 +200,7 @@ The next year Poincaré continued to weigh his bread from the same baker, who wa
 
 * The importance of visualisation
 
-Anscombe's Quartet: all have identical mean and standard deviation.
+Anscombe's Quartet: all have identical mean and variance.
 
 [[./images/anscombes-quartet.png]]
 
@@ -220,18 +225,19 @@ Anscombe's Quartet: all have identical mean and standard deviation.
      (i/add-derived-column "Victors Share" ["Victors" "Electorate"] /)
      (i/view))
 #+END_SRC
-
+ 
 * Two variables: scatter plots!
 
 #+BEGIN_SRC clojure
-  (let [data (->> (uk-data)
-                  (clean-uk-data)
-                  (derive-uk-data))]
-    (-> (c/scatter-plot ($ "Turnout" data)
+  (defn ex-1-33 []
+    (let [data (->> (uk-data)
+                    (clean-uk-data)
+                    (derive-uk-data))]
+      (-> (scatter-plot ($ "Turnout" data)
                         ($ "Victors Share" data)
                         :x-label "Turnout"
                         :y-label "Victor's Share")
-        (i/view)))
+          (view))))
 #+END_SRC
 
 * UK Votes scatter
@@ -261,9 +267,10 @@ Anscombe's Quartet: all have identical mean and standard deviation.
                        (min max-bin)))]
     (map bin-fn xs)))
 
-(->> (uk-electorate)
-     (bin 10)
-     (frequencies))
+(defn ex-1-10 []
+  (->> (uk-electorate)
+       (bin 10)
+       (frequencies)))
 
 ;; => {0 1, 1 1, 2 4, 3 22, 4 130, 5 320, 6 156, 7 15, 9 1}
 
@@ -341,6 +348,10 @@ Interpolate between the colours of the spectrum.
 #+END_SRC
 
 * A finished heatmap
+
+#+BEGIN_SRC bash
+   $> lein run -e 1.36
+#+END_SRC
 
 [[./images/ru-2d-heatmap.png]]
 
@@ -433,6 +444,12 @@ We can often only infer the population parameters.
    (.getElementById js/document "root")))
 #+END_SRC
 
+* Compile the cljs
+
+#+BEGIN_SRC bash
+$> lein cljsbuild once
+#+END_SRC
+
 * Demo
 
 * Standard Error
@@ -443,9 +460,13 @@ ${SE =} { \sigma_X \over \sqrt{n} }$
 
 * Standard Error
 
-Let's see how the standard error changes with sample size
+Let's see how the standard error changes with sample size.
 
 * Demo
+
+* Standard deviation proportions
+
+[[./images/standard-deviation-proportions.png]]
 
 * Small samples
 
@@ -524,7 +545,7 @@ http://www.theguardian.com/sport/datablog/2012/aug/07/olympics-2012-athletes-age
 
 * What is correlation anyway?
 
-We've talked about variance in the context of the normal distribution
+We've talked about variance in the context of the normal distribution.
 
 * Covariance
 
@@ -542,9 +563,7 @@ http://xkcd.com/552/
 
 * Pearson's correlation
 
-Covarience divided by the product of standard deviations
-
-Measures linear correlation.
+Covariance divided by the product of standard deviations. It measures linear correlation.
 
 ${\rho X,Y} = {COV(X,Y) \over \sigma_X \sigma_Y}$
 
@@ -557,7 +576,7 @@ ${\rho X,Y} = {COV(X,Y) \over \sigma_X \sigma_Y}$
 
 * Pearson's correlation
 
-If ${r}$ is 0, it doesn’t necessarily mean that the variables are not correlated. Pearson’s correlation only measures linear relationships. There could still be some non-linear relationship between variables that isn’t captured by  as demonstrated by the following plots.
+If ${r}$ is 0, it doesn’t necessarily mean that the variables are not correlated. Pearson’s correlation only measures linear relationships.
 
 [[./images/pearson-correlation-examples.png]]
 
@@ -642,30 +661,43 @@ http://www.topendsports.com/sport/swimming/profiles/spitz-mark.htm
     (let [data (->> (swimmer-data)
                     (i/add-derived-column "Gender Dummy"
                                           ["Sex"] gender-dummy))
-          x (features ["Height, cm" "Age" "Gender Dummy"])
-          y (i/log ($ "Weight" data))]
-      (s/linear-model y x)))
+          x (features data ["Height, cm" "Age" "Gender Dummy"])
+          y (i/log ($ "Weight" data))
+          model  (s/linear-model y x)]
+      (:coefs model)))
 
-;; => [2.2307529431422637 0.010714697827121089 0.002372188749408574 0.0975412532492026]
+  ;; => [2.2307529431422637 0.010714697827121089 0.002372188749408574 0.0975412532492026]
 #+END_SRC
 
 * Multivariate Linear Regression
 
 $${y = \theta_0 + \theta_1 x_1 + ... + \theta_n x_n}$$
 
+* Least Squares
+
+[[./images/r2-residuals.png]]
+
 * Making predictions
 
 $${ y = \theta^T x }$$
 
 #+BEGIN_SRC clojure
-(defn predict [theta x]
-  (-> (cl/t theta)
-      (cl/* x)
-      (first)))
+  (defn predict [theta x]
+    (-> (cl/t theta)
+        (cl/* x)
+        (first)))
 
-(i/exp (predict (matrix (:coefs lm)) (matrix [1 185 22 1]))
+  (defn ex-3-27 []
+    (let [data (->> (swimmer-data)
+                    (i/add-derived-column "Gender Dummy"
+                                          ["Sex"] gender-dummy))
+          x (features data ["Height, cm" "Age" "Gender Dummy"])
+          y (i/log ($ "Weight" data))
+          model  (s/linear-model y x)]
+      (i/exp (predict (i/matrix (:coefs model))
+                      (i/matrix [1 185 22 1])))))
 
-;; => 78.46882772631697
+  ;; => 78.46882772631697
 #+END_SRC
 
 * How close?
@@ -674,17 +706,24 @@ The result is around 78.47kg.
 
 Compared to 79kg, we were pretty close!
 
+* Summary
+
+  * Distributions
+  * Statistics
+  * Visualisation with Quil
+  * Correlation
+  * Linear regression
+  * Multivariate linear regression with Incanter
+
 * Interlude
 * Classification
 * Question
 
 Did all passengers on the Titanic have an equal chance of survival?
 
-* Grab the data
+* On the data
 
-Data is based on Thomas Cason's Titanic3 dataset. Information on how this was constructed is here.
-
-http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/titanic3info.txt
+Data is based on Thomas Cason's Titanic3 dataset.
 
 * Inspect the data
 
@@ -717,7 +756,6 @@ $${ {161 + 339 \over 682 + 127}  = {500 \over 809} = 0.61 }$$
 $${SE =  0.013 }$$
 
 * How significant?
-
 
 $${z = { p_1 - p_2 \over  SE }}$$
 
@@ -779,9 +817,9 @@ $${ P(survive|female) = { {339 \over 500 } {500 \over 1309} \over {446 \over 130
 
 * Bayes classification
 
-$${ P(survive |third,male) = { p(survive) p(third|survive) p(male|survive) \over p(third,male)} }$$
+$${ P(survive |third,male) = { P(survive) P(third|survive) P(male|survive) \over P(third,male)} }$$
 
-$${ P(perish |third,male) = { p(perish) p(third|perish) p(male|perish) \over p(third,male) } }$$
+$${ P(perish |third,male) = { P(perish) P(third|perish) P(male|perish) \over P(third,male) } }$$
 
 Because the evidence is the same for all classes, we can cancel this out.
 
@@ -825,21 +863,22 @@ Because the evidence is the same for all classes, we can cancel this out.
 * Naive Bayes model
 
 #+BEGIN_SRC clojure
-(let [data (titanic-samples)]
-    (pprint (naive-bayes data :survived [:gender :class])))
+(defn ex-5-6 []
+  (let [data (titanic-samples)]
+    (pprint (naive-bayes data :survived [:gender :class]))))
 #+END_SRC
 
 ...produces the following output...
 
 #+BEGIN_SRC clojure
-{false
- {:class {:third 528, :second 158, :first 123},
-  :gender {:male 682, :female 127},
-  :total 809},
- true
- {:class {:third 181, :second 119, :first 198},
-  :gender {:male 161, :female 337},
-  :total 498}}
+;; {false
+;;  {:class {:third 528, :second 158, :first 123},
+;;   :gender {:male 682, :female 127},
+;;   :total 809},
+;;  true
+;;  {:class {:third 181, :second 119, :first 198},
+;;   :gender {:male 161, :female 337},
+;;   :total 498}}
 #+END_SRC
 
 * Making predictions
@@ -864,7 +903,7 @@ Because the evidence is the same for all classes, we can cancel this out.
                        [class (conditional-probability model test class)])
                      (keys model))]
       (-> (sort-by second > probs)
-          ffirst)))
+          (ffirst))))
 #+END_SRC
 
 * Does it work?
@@ -1001,13 +1040,10 @@ The cost function will be lowest when the parameters are at their optimum.
 
 Provides heavy-lifting for running tasks like gradient descent.
 
-Java :(
-
 #+BEGIN_SRC clojure
-(:import [clojure.lang IFn]
-           [org.apache.commons.math3.analysis MultivariateFunction MultivariateVectorFunction ParametricUnivariateFunction]
+  (:import [org.apache.commons.math3.analysis MultivariateFunction MultivariateVectorFunction]
            [org.apache.commons.math3.optim InitialGuess MaxEval SimpleBounds OptimizationData SimpleValueChecker PointValuePair]
-           [org.apache.commons.math3.optim.nonlinear.scalar ObjectiveFunction ObjectiveFunctionGradient GoalType MultivariateOptimizer]
+           [org.apache.commons.math3.optim.nonlinear.scalar ObjectiveFunction ObjectiveFunctionGradient GoalType]
            [org.apache.commons.math3.optim.nonlinear.scalar.gradient NonLinearConjugateGradientOptimizer NonLinearConjugateGradientOptimizer$Formula])
 #+END_SRC
 
@@ -1085,16 +1121,14 @@ An object wrapper to represent a function: too many levels of indirection?!
 * Making predictions
 
 #+BEGIN_SRC clojure
-(def logistic-theta
-  [0.9884451497898937 -0.9582211820237765 -0.2942204909975665
-   -0.008340184840488646 -0.03219717794854576 2.6351942087729614
-   0.5946571788582461 1.2192345883060776 0.6481382214058901])
+(def theta
+  [0.690807824623404 -0.9033828001369435 -0.3114375278698766 -0.01894319673287219 -0.03100315579768661 2.5894858366033273 0.7939190708193374 1.3711334887947388 0.6672555257828919])
 
 (defn round [x]
   (Math/round x))
 
 (def logistic-model
-  (logistic-function logistic-theta))
+  (logistic-function theta))
 
 (defn ex-5-13 []
   (let [data (titanic-features)
@@ -1105,7 +1139,7 @@ An object wrapper to represent a function: too many levels of indirection?!
     (/ (get results true)
        (apply + (vals results)))))
 
-;; => 1028/1309
+;; => 1030/1309
 #+END_SRC
 
 * Evaluating the classifier
@@ -1171,7 +1205,7 @@ $${ cos( \theta ) = { A \cdot B \over \| A \| \| B \| } }$$
 * Example 
 
 #+BEGIN_SRC clojure
-  (->> (split "the quick brown fox jumps over the lazy dog" #"\W")
+  (->> (split "the quick brown fox jumps over the lazy dog" #"\W+")
        (document-vector dictionary))
 
   ;; => {7 1, 6 1, 5 1, 4 1, 3 1, 2 1, 1 1, 0 2}
@@ -1244,6 +1278,10 @@ We're going to be clustering the Reuters dataset.
 Follow the readme instructions:
 
 #+BEGIN_SRC bash
+brew install mahout
+#+END_SRC
+
+#+BEGIN_SRC bash
 script/download-reuters.sh
 lein run -e 6.7
 mahout seqdirectory -i data/reuters-txt -o data/reuters-sequencefile
@@ -1281,9 +1319,9 @@ Term frequency, inverse document frenquency.
 
 $${tfidf(t, d, D) = tf(t, d) \cdot idf(t, D) }$$
 
-* We need a unique index for each word
+* We need a unique ID
 
-We need a way of computing a unique index in parallel
+And we need to compute it in parallel.
 
 * Parkour Mapping
 
@@ -1303,9 +1341,6 @@ We need a way of computing a unique index in parallel
        (r/map #(vector % 1))))
 #+END_SRC
 
-Parkour uses Clojure's reducers.
-Can supply metadata informing Parkour how we'd like to receive our data.
-
 * Shape metadata
 
 #+BEGIN_SRC clojure
@@ -1314,7 +1349,7 @@ Can supply metadata informing Parkour how we'd like to receive our data.
 :vals ;; Just the values from each key-value pair.
 #+END_SRC
 
-* Just normal functions
+* Plain old functions
 
 #+BEGIN_SRC clojure
   (->>  (document-count-m ["it's lovely that you're musical"
@@ -1343,8 +1378,6 @@ Can supply metadata informing Parkour how we'd like to receive our data.
             [[:data [word [[global-offset local-offset] (apply + counts)]]]])])
        0 (r/mapcat identity [coll [[::finished nil]]]))))
 #+END_SRC
-
-We have access to the MapReduce context, can get the partition number
 
 * Creating a job
 
@@ -1458,10 +1491,19 @@ We have access to the MapReduce context, can get the partition number
 
   (defn -main [& args]
     (System/exit (tool/run tool args)))
+#+END_SRC
 
+* Run the job
+
+#+BEGIN_SRC clojure
+(defn ex-6-14 []
+  (let [input "data/reuters-sequencefile"
+        output "data/parkour-vectors"]
+    (tool/run vectorizer/tool [input output])))
 #+END_SRC
 
 * K-Means
+
 * K-Means
 
 [[./images/kmeans.png]]
@@ -1498,20 +1540,22 @@ mahout clusterdump \
 [[./images/cluster-ambiguity.png]]
 
 * What did I leave out?
-  * Spectral and LDA clustering
   * Cluster quality measures
+  * Spectral and LDA clustering
   * Collaborative filtering with Mahout
+  * Random forests
   * Spark for movie recommendations with Sparkling
   * Graph data with Loom and Datomic
   * MapReduce with Cascalog and PigPen
   * Adapting algorithms for massive scale
   * Time series and forecasting
-  * Dimensionality reduction
+  * Dimensionality reduction, feature selection
   * More visualisation techniques
+  * Lots more...
 
 * Book
 
-Clojure for Data Science will be available in the second half of the year from http://packtpub.com.
+*Clojure for Data Science* will be available in the second half of the year from http://packtpub.com.
 
 http://cljds.com
 
