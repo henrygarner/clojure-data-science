@@ -12,7 +12,7 @@
 
 I am in the final stages of writing *Clojure for Data Science*.
 
-It will be published via http://packtpub.com later this year.
+It will be published by http://packtpub.com later this year.
 
 * Am I qualified?
 
